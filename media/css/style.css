@@ -1,0 +1,86 @@
+/**
+ * @version     CVS: 1.0.0
+ * @package     com_ra_eventbooking
+ * @copyright   2025 Ruby Tuesday
+ * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @author      Chris Vaughan  <ruby.tuesday@ramblers-webs.org.uk>
+ */
+label.booking.label{
+    margin-right:15px;
+    font-weight:bold;
+    min-width: 180px;
+    display: inline-block;
+}
+input.booking.input{
+    min-width: 400px;
+
+}
+
+div.ra.bookings.form div.bookingitem{
+    margin: 2px;
+    border-radius: 10px 10px 10px 10px;
+    padding: 5px;
+    display: block;
+    width: 97%;
+    border: 2px solid #cccccc;
+    background-color: #eeeeee;
+    line-height: 1.5em;
+    font-size: 115%;
+    word-break: keep-all;
+}
+div.ra.bookings.verify{
+    text-align: center;
+}
+div.ra.bookings.verify input.booking.email.code{
+    font-size: 130%;
+    font-weight:bold;
+}
+
+span.ra.bookings.paid.edit{
+    cursor:pointer;
+}
+span.ra.bookings.paid.edit:hover{
+    background-color: var(--lightgrey);
+}
+span.ra.bookings.delete{
+    height:20px;
+    width:20px;
+    display:inline-block;
+    background-image:url("../icons/delete.png");
+    background-size: 20px 20px;
+    margin-right: 10px;
+    cursor:pointer;
+}
+span.ra.bookings.envelope{
+    height:20px;
+    width:25px;
+    display:inline-block;
+    background-image:url("../icons/envelope.png");
+    background-size: 25px 20px;
+    cursor:pointer;
+}
+
+div.ra.bookings.form span.submit.inactive .link-button{
+    background-color: #aaaaaa;
+}
+
+div.ra.bookings.form span.submit .link-button{
+    margin-left: 25px;
+}
+div.email.booking{
+    width:650px;
+}
+div.booking.quill{
+    position: relative;
+    right: -5%;
+}
+div.booking.quill div.ql-toolbar.ql-snow{
+    background-color: #ffffff;
+    border-radius:15px 15px 0px 0px;
+    width:95%;
+}
+div.booking.quill  div.ql-container.ql-snow{
+    background-color: #ffffff;
+    border-radius:0px 0px 15px 15px;
+    width:95%;
+}

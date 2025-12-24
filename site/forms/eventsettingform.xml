@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form addfieldprefix="Ramblers\Component\Ra_eventbooking\Site\Field">
+  <fieldset>
+    <field name="id" type="text" readonly="true" class="readonly" default="0" description="JGLOBAL_FIELD_ID_DESC"/>
+    <field name="state" default="1" type="list" label="JSTATUS" description="JFIELD_PUBLISHED_DESC" class="inputbox" size="1">
+      <option value="1">JPUBLISHED</option>
+      <option value="0">JUNPUBLISHED</option>
+      <option value="2">JARCHIVED</option>
+      <option value="-2">JTRASHED</option>
+    </field>
+    <field name="ordering"/>
+    <field name="checked_out" type="hidden" filter="unset"/>
+    <field name="checked_out_time" type="hidden" filter="unset"/>
+    <field name="booking_data" type="editor" buttons="true" class="inputbox" filter="safehtml" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_BOOKING_DATA" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_BOOKING_DATA" hidden="true" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_BOOKING_DATA"/>
+    <field name="waiting_list_data" type="editor" buttons="true" class="inputbox" filter="safehtml" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_WAITING_LIST_DATA" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_WAITING_LIST_DATA" hidden="true" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_WAITING_LIST_DATA"/>
+    <field name="event_data" type="editor" buttons="true" class="inputbox" filter="safehtml" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_DATA" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_EVENT_DATA" hidden="true" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_DATA"/>
+    <field name="event_id" filter="safehtml" type="text" required="true" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_ID" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_EVENT_ID" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_ID"/>
+    <field name="max_places" required="true" default="0" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_MAX_PLACES" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_MAX_PLACES" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_MAX_PLACES"/>
+    <field name="payment_required" type="checkbox" checked="0" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_PAYMENT_REQUIRED" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_PAYMENT_REQUIRED" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_PAYMENT_REQUIRED"/>
+    <field name="payment_details" cols="50" rows="6" filter="safehtml" type="textarea" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_PAYMENT_DETAILS" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_PAYMENT_DETAILS" hint="Description of what payment is required."/>
+    <field name="creation_date" type="timecreated" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_CREATION_DATE" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_CREATION_DATE" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_CREATION_DATE"/>
+    <field name="event_contact_name" filter="safehtml" type="text" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_CONTACT_NAME" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_EVENT_CONTACT_NAME" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_CONTACT_NAME"/>
+    <field name="event_contact_email" validate="email" type="email" label="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_CONTACT_EMAIL" description="COM_RA_EVENTBOOKING_FORM_DESC_EVENTSETTING_EVENT_CONTACT_EMAIL" hint="COM_RA_EVENTBOOKING_FORM_LBL_EVENTSETTING_EVENT_CONTACT_EMAIL"/>
+    <field name="version_note" type="text" label="JGLOBAL_FIELD_VERSION_NOTE_LABEL" description="JGLOBAL_FIELD_VERSION_NOTE_DESC" class="inputbox" size="45" labelclass="control-label"/>
+  </fieldset>
+</form>

@@ -1,0 +1,554 @@
+/* 
+ * copyright: Chris Vaughan
+ * email: ruby.tuesday@ramblers-webs.org.uk
+ * EW     an RA event or walk in ramblers library format
+ * ESC    a collection of booking records , EVB
+ * EVB    a booking record for an event,  an object
+ * NBI    a new booking information for one user
+ * BLC    a collection of bookings, collection of BLI
+ * BLI    the user information booking for a user
+ * WLC    a collection of waiting/notify records, collection of WLI
+ * WLI    the user information about someone on waiting/notify list
+ */
+
+var ra;
+if (typeof (ra) === "undefined") {
+    ra = {};
+}
+
+if (typeof (ra.bookings) === "undefined") {
+    ra.bookings = {};
+}
+
+ra.bookings.formBooking = function (settings, user, ewid, ew, evb) {
+    this.settings = settings;
+    this.user = user;
+    this.ewid = ewid;
+    this.ew = ew;
+    this.eventTitle = ra.date.dowddmmyyyy(ew.basics.walkDate) + ' ' + ew.basics.title;
+    this.evb = evb;
+    this.elements = null;
+    this.verification = {md5: '',
+        codeLength: 6};
+    this.bookingData = {attendees: 1,
+        id: 0,
+        name: '',
+        email: '',
+        confirmEmail: '',
+        md5Email: '',
+        telephone: '',
+        paid: '',
+        currentAttendees: 0};
+    this.input = new ra.bookings.inputFields;
+    const BookingStatus = Object.freeze({
+        BOOKED: 0,
+        INVALIDLOGON: 1,
+        INVALIDLOGOFF: 2,
+        NONE: 3,
+        WAITING: 4
+    });
+    this.display = function (tag) {
+        this.tag = tag;
+        this.tag.innerHTML = '';
+        var tags = [
+            {name: 'container', parent: 'root', tag: 'div', attrs: {class: 'ra bookings form'}},
+            {name: 'event', parent: 'container', tag: 'div', attrs: {class: 'bookingitem'}},
+            {name: 'eventDetails', parent: 'event', tag: 'div'},
+            {name: 'userOptions', parent: 'event', tag: 'div'},
+            {parent: 'event', tag: 'div', style: {clear: 'both', 'margin-bottom': '10px'}},
+            {name: 'lists', parent: 'event', tag: 'div'},
+            {parent: 'event', tag: 'div', style: {clear: 'both', 'margin-bottom': '10px'}},
+            {name: 'userDetails', parent: 'container', tag: 'div', attrs: {class: 'bookingitem'}},
+            {name: 'user', parent: 'userDetails', tag: 'div'},
+            {name: 'status', parent: 'userDetails', tag: 'div'},
+            {name: 'bookplace', parent: 'userDetails', tag: 'div'},
+            {name: 'message', parent: 'userDetails', tag: 'div'},
+            {name: 'content', parent: 'userDetails', tag: 'div'}
+        ];
+        this.elements = ra.html.generateTags(tag, tags);
+        this.displayEvent(this.elements.eventDetails);
+        var self = this;
+        this.tag.addEventListener('userDetailsVerified', (e) => {
+            self.elements.content.innerHTML = '';
+            self.elements.lists.innerHTML = '';
+            self.elements.bookplace.innerHTML = '';
+            this.elements.message.innerHTML = '';
+            self.bookingForm(self.elements.bookplace);
+            self.bookingLists(self.elements.lists);
+        });
+        this.tag.addEventListener('userDetailsChanged', (e) => {
+            self.elements.content.innerHTML = '';
+            self.elements.lists.innerHTML = '';
+            self.elements.bookplace.innerHTML = '';
+            if (e.raData.okay) {
+                self.verifyEmailAddress(self.elements.bookplace);
+            }
+        });
+        this.getUser(this.elements.user);
+    };
+    this.refreshDisplay = function () {
+        let event = new Event("bookingInfoChanged"); // 
+        document.dispatchEvent(event);
+    };
+    this.displayEvent = function (tag) {
+        // date and title
+        // number of places
+        // number of attendees
+        ra.bookings.addTextTag(tag, 'h3', ra.date.dowddmmyyyy(ew.basics.walkDate));
+        ra.bookings.addTextTag(tag, 'h3', this.ew.basics.title);
+        this.evb.displayBookingStatus(tag, this.settings, this.user);
+        this.settings.displayUser(tag, this.user.id);
+    };
+    this.getUser = function (tag) {
+        if (this.user.id > 0) {
+            this.bookingData.id = this.user.id;
+            this.bookingData.name = this.user.name;
+            this.bookingData.md5Email = this.user.md5Email;
+            this.bookingData.telephone = '';
+            ra.bookings.addTextTag(tag, 'h3', 'Welcome ' + this.user.name);
+            let event = new Event("userDetailsVerified"); // 
+            this.tag.dispatchEvent(event);
+            return;
+        }
+        if (!this.settings.guest) {
+            ra.bookings.addTextTag(tag, 'p', 'Logged on: You must be logged to book places.');
+            return;
+        }
+        ra.bookings.addTextTag(tag, "h2", "Booking place(s) on this event");
+        ra.bookings.addTextTag(tag, 'p', 'Welcome - you are not logged on to this site and hence your booking will be as a guest');
+        ra.bookings.addTextTag(tag, 'p', 'Please provide the following contact information');
+        ra.bookings.addTextTag(tag, 'p', '<small>Note that your name may be visible to other users, so you may wish to abbreviate it, e.g. Jane S rather than Jane Smith, Other details may be viewed by the groups booking contacts</small>');
+        this._name = this.input.addText(tag, 'name', "Your name:", this.bookingData, 'name', 'Who is making this booking', null);
+        this._email = this.input.addEmail(tag, 'email', "Email Address:", this.bookingData, 'email', 'Contact\'s email address', null);
+        this._confirmEmail = this.input.addEmail(tag, 'email', "Confirm Email Address:", this.bookingData, 'confirmEmail', 'Confirm email address', null);
+        this._tel = this.input.addtelephone(tag, 'tel', "Contact Telephone:", this.bookingData, 'telephone', 'Telephone number', null);
+        var self = this;
+        this._name.addEventListener("input", function () {
+            self.checkUserDetails();
+        });
+        this._email.addEventListener("input", function () {
+            self.checkUserDetails();
+        });
+        this._confirmEmail.addEventListener("input", function () {
+            self.checkUserDetails();
+        });
+        this._tel.addEventListener("input", function () {
+            self.checkUserDetails();
+        });
+    };
+    this.checkUserDetails = function () {
+        var $okay = true;
+        this._name.style.color = 'black';
+        this._email.style.color = 'black';
+        this._confirmEmail.style.color = 'black';
+        this._tel.style.color = 'black';
+        var name = this._name.value.trim();
+        var email = this._email.value.trim();
+        var confirmEmail = this._confirmEmail.value.trim();
+        var tel = this._tel.value.trim();
+        if (email !== confirmEmail) {
+            this.verification = {md5: '',
+                codeLength: 6};
+        }
+        if (name.length < 3) {
+            this._name.style.color = 'red';
+            $okay = false;
+        }
+        if (email.length < 1) {
+            this._email.style.color = 'red';
+            $okay = false;
+        }
+        if (tel.length < 7) {
+            this._tel.style.color = 'red';
+            $okay = false;
+        }
+        if (!this._email.checkValidity()) {
+            this._email.style.color = 'red';
+            $okay = false;
+        }
+        this.bookingData.md5Email = md5(email);
+        if (confirmEmail !== email) {
+            this._confirmEmail.style.color = 'red';
+            $okay = false;
+        }
+        if (/^[0-9+\-() ]+$/.test(tel) === false) {
+            this._tel.style.color = 'red';
+            $okay = false;
+        }
+        let event = new Event("userDetailsChanged"); // 
+        event.raData = {};
+        event.raData.okay = $okay;
+        this.tag.dispatchEvent(event);
+    };
+    this.verifyEmailAddress = function (tag) {
+        // msg 
+        // send/resend button
+        // send email to user with verification code
+        // receive md5 value of code sent
+        // display input field and message
+        // if md5(input) is same as above then email verified 
+        var self = this;
+        var tags = [
+            {parent: 'root', tag: 'hr'},
+            {name: 'div', parent: 'root', tag: 'div', attrs: {class: 'ra bookings verify'}},
+            {name: 'message', parent: 'div', tag: 'div', innerHTML: 'We need to send you a Code so you can verify your email address.<br/>If you cannot find the email please look in your spam folder<br/>Please enter the supplied code in the field below'},
+            {name: 'send', parent: 'div', tag: 'div', attrs: {class: 'link-button tiny button mintcake'}, innerHTML: 'Send Email', style: {'margin-top': '10px'}},
+            {name: 'code', parent: 'div', tag: 'div', style: {'margin-top': '10px'}}
+
+        ];
+        // below is for main
+//        if (self.verification.md5 !== '') {
+//            let event = new Event("userDetailsVerified"); // 
+//            event.raData = {};
+//            event.raData.okay = true;
+//            this.tag.dispatchEvent(event);
+//        }
+//        if (self.verification.md5 !== '') {
+//            return;
+//        }
+        var md5Email = ra.cookie.read("ra-booking");
+        if (this.bookingData.md5Email === md5Email) {
+            let event = new Event("userDetailsVerified"); // 
+            event.raData = {};
+            event.raData.okay = true;
+            this.tag.dispatchEvent(event);
+            return;
+        }
+        var elements = ra.html.generateTags(tag, tags);
+        var codeTag = document.createElement('input');
+        codeTag.setAttribute('class', 'booking email code');
+        codeTag.setAttribute('type', 'text');
+        codeTag.setAttribute('placeholder', 'Enter code');
+        elements.code.appendChild(codeTag);
+        elements.send.addEventListener('click', (e) => {
+            elements.send.innerHTML = "Resend Email";
+            var data = {
+                user: self.bookingData,
+                ew: self.ew
+            };
+            ra.bookings.serverAction(this, 'VerifyEmail', data, (self, results) => {
+                self.verification.md5 = results.data.md5code;
+                self.verification.codeLength = results.data.codelength;
+                self.elements.message.innerHTML = 'Verification email has been sent';
+            });
+            this.elements.message.innerHTML = 'Sending verification email ...';
+        });
+        codeTag.addEventListener('input', (e) => {
+            var input = e.target.value.trim();
+            if (input.length === self.verification.codeLength) {
+                if (self.verification.md5 === md5(input)) {
+                    ra.cookie.create(this.bookingData.md5Email, "ra-booking", 2);
+                    let event = new Event("userDetailsVerified"); // 
+                    event.raData = {};
+                    event.raData.okay = true;
+                    this.tag.dispatchEvent(event);
+                }
+            }
+        });
+    };
+
+    this.bookingLists = function (tag) {
+        var self = this;
+        tag.addEventListener('AdminEmailAllBooking', (e) => {
+            var options = {
+                subject: self.eventTitle,
+                toWhom: 'All those booked on event',
+                from: self.user,
+                emailContent: '',
+                to: null,
+                ewid: self.ewid,
+                ew: JSON.stringify(self.ew),
+                serverAction: 'AdminEmailAllBooking'
+            };
+            self.emailForm(options);
+        });
+        tag.addEventListener('emailSingleBooker', (e) => {
+            var options = {
+                subject: self.eventTitle,
+                toWhom: e.raData.user.name,
+                from: self.user,
+                emailContent: '',
+                to: e.raData.user,
+                ewid: self.ewid,
+                ew: JSON.stringify(self.ew),
+                serverAction: 'Adminemailsinglebooking'
+            };
+            self.emailForm(options);
+        });
+        tag.addEventListener('AdminEmailBookingList', (e) => {
+            var data = {
+                ew: JSON.stringify(self.ew),
+                user: self.user,
+                ewid: self.ewid
+            };
+            ra.bookings.serverAction(this, 'AdminEmailBookingList', data, (self, results) => {
+
+            });
+
+        });
+        tag.addEventListener('changePaid', (e) => {
+            let amount = ra.showPrompt("Please enter amount paid, enter blank if not paid", "Zero");
+            if (amount !== null) {
+                self.changePaid(e.raData.md5Email, amount);
+            }
+        });
+        tag.addEventListener('deleteBooker', (e) => {
+            if (ra.showConfirm('Confirm you wish to delete this booking')) {
+                self.deleteBooker(e.raData);
+            }
+        });
+        tag.addEventListener('AdminEmailAllWaiting', (e) => {
+            var options = {
+                subject: self.eventTitle,
+                toWhom: 'All those on notification list',
+                from: self.user,
+                emailContent: '',
+                to: null,
+                ewid: self.ewid,
+                ew: JSON.stringify(self.ew),
+                serverAction: 'AdminEmailAllWaiting'
+            };
+            self.emailForm(options);
+        });
+        tag.addEventListener('AdminEmailSingleWaiting', (e) => {
+            var options = {
+                subject: self.eventTitle,
+                toWhom: e.raData.user.name,
+                from: self.user,
+                emailContent: '',
+                to: e.raData.user,
+                ewid: self.ewid,
+                ew: JSON.stringify(self.ew),
+                serverAction: 'AdminEmailSingleWaiting'
+            };
+            self.emailForm(options);
+        });
+        tag.addEventListener('deleteWaiting', (e) => {
+            if (ra.showConfirm('Confirm you wish to delete this person from waiting list')) {
+                self.deleteWaiting(e.raData);
+            }
+        });
+        switch (this.getStatus()) {
+            case BookingStatus.WAITING:
+            case BookingStatus.BOOKED:
+            case BookingStatus.NONE:
+                if (this.settings.canDisplayBookingList(this.user)) {
+                    this.evb.listAttendees(tag, this.settings, this.user);
+                }
+                if (this.settings.canDisplayWaitingList(this.user)) {
+                    this.evb.listWaiting(tag, this.settings, this.user);
+                }
+        }
+    };
+    this.getStatus = function () {
+        this.bookingItem = this.evb.getBooking(this.bookingData.md5Email);
+        if (this.bookingItem !== null) {
+            this.bookingData.currentAttendees = this.bookingItem.attendees;
+            if (this.bookingItem.id === this.user.id) {
+                return BookingStatus.BOOKED;
+            } else {
+                if (this.user.id === 0) {
+                    return BookingStatus.INVALIDLOGON;
+                } else {
+                    return BookingStatus.INVALIDLOGOFF;
+                }
+            }
+        }
+        var waitingItem = this.evb.getWaiting(this.bookingData.md5Email);
+        if (waitingItem !== null) {
+            return BookingStatus.WAITING;
+        }
+        return BookingStatus.NONE;
+    };
+    this.displayStatus = function (tag) {
+        // display status of user booking
+        switch (this.getStatus()) {
+            case BookingStatus.WAITING:
+                ra.bookings.addTextTag(tag, "div", "You are on the waiting list");
+                break;
+            case BookingStatus.BOOKED:
+                ra.bookings.addTextTag(tag, "div", "You have booked " + this.bookingItem.attendees + " place(s)");
+                if (this.evb.payment_required) {
+                    ra.bookings.addTextTag(tag, "div", "Payment made <b>" + this.bookingItem.paid + "</b>");
+                    this.bookingData.paid = this.bookingItem.paid;
+                }
+                break;
+            case BookingStatus.INVALIDLOGOFF:
+                ra.bookings.addTextTag(tag, "div", "You already have a booking: Your booking was made while a guest user (not logged on), please log off to alter your booking");
+                break;
+            case BookingStatus.INVALIDLOGON:
+                ra.bookings.addTextTag(tag, "div", "You already have a booking: Your booking was made while logged on, please log on to alter your booking");
+                break;
+            case BookingStatus.NONE:
+                ra.bookings.addTextTag(tag, "div", "Your booking: You don't have any existing booking.");
+                break;
+            default:
+                ra.bookings.addTextTag(tag, "div", "Your booking: ERROR: INVALID BOOKING STATUS");
+                return;
+        }
+    };
+    this.bookingForm = function (tag) {
+        var self = this;
+        switch (this.getStatus()) {
+            case BookingStatus.WAITING:
+            case BookingStatus.BOOKED:
+            case BookingStatus.NONE:
+                this.displayStatus(tag);
+                break;
+            default:
+                return;
+        }
+
+        var maxPlaces = this.evb.calcMaxPlaces(this.user, this.settings);
+        if (this.bookingItem !== null) {
+            var ele = document.createElement('div');
+            tag.appendChild(ele);
+            var del = document.createElement("span");
+            del.style.paddingRight = '10px';
+            del.innerHTML = 'Cancel booking';
+            ele.appendChild(del);
+            ra.bookings.displayDeleteIcon(ele, "Cancel this booking", tag, "deleteBooking", {user: self});
+            tag.addEventListener('deleteBooking', (e) => {
+                if (ra.showConfirm('Confirm you wish to cancel booking')) {
+                    self.bookingData.attendees = 0;
+                    self.submitBooking();
+                }
+            });
+        }
+
+        var container = document.createElement("span");
+        container.classList.add('submit');
+        tag.appendChild(container);
+        var range = {min: 1, max: maxPlaces, current: 0};
+        var prompt = "No of places you wish to book";
+        if (this.bookingItem !== null) {
+            if (maxPlaces === 0) {
+                range.max = this.bookingItem.attendees;
+            }
+            range.current = this.bookingItem.attendees;
+            prompt = "Change number places you wish to book";
+        }
+        var select = this.input.addNumberSelect(container, 'attendees', prompt, this.bookingData, 'attendees', range, null);
+        if (select !== null) {
+            var submit = this.input.addButton(container, ['link-button', 'tiny', 'button', 'mintcake'], 'Submit');
+            submit.addEventListener('click', (e) => {
+                if (self.bookingData.currentAttendees !== this.bookingData.attendees) {
+                    self.submitBooking();
+                }
+            });
+        }
+        var displayWaitingList = false;
+        if (maxPlaces === 0) {
+            // fully booked
+            ra.bookings.addTextTag(tag, "p", "This event is FULLY booked, ");
+            if (this.bookingItem === null) {
+                displayWaitingList = true;
+            }
+        }
+        var waitingItem = this.evb.getWaiting(this.bookingData.md5Email);
+        if (waitingItem !== null) {
+            displayWaitingList = true;
+        }
+        if (displayWaitingList) {
+            this.displayWaitingListOptions(tag);
+        }
+
+    };
+    this.submitBooking = function () {
+        const data = {
+            ewid: this.ewid,
+            ew: this.ew,
+            user: this.user,
+            bookingData: this.bookingData
+        };
+        ra.bookings.serverAction(this, 'SubmitBooking', data, (self, results) => {
+            self.refreshDisplay();
+        });
+        this.elements.message.innerHTML = 'Submit booking ...';
+    };
+    this.displayWaitingListOptions = function (tag) {
+        if (!this.settings.waitinglist) {
+            return;
+        }
+        var waitingItem = this.evb.getWaiting(this.bookingData.md5Email);
+        if (waitingItem === null) {
+            ra.bookings.addTextTag(tag, "p", "If you wish to be notified if a place becomes available, please use the <b>Notify</b> Me option below.");
+            var submit = this.input.addButton(tag, ['link-button', 'tiny', 'button', 'mintcake'], 'Notify Me');
+            var self = this;
+            submit.addEventListener('click', (e) => {
+                self.Waiting();
+            });
+        } else {
+            ra.bookings.addTextTag(tag, "p", "You are on our list to be notified when places become available.");
+            var submit = this.input.addButton(tag, ['link-button', 'tiny', 'button', 'mintcake'], 'Remove Notify Me');
+            var self = this;
+            submit.addEventListener('click', (e) => {
+                self.Waiting();
+            });
+        }
+    };
+
+
+    this.Waiting = function () {
+        const data = {
+            ewid: this.ewid,
+            ew: this.ew,
+            user: this.user,
+            bookingData: this.bookingData
+        };
+        ra.bookings.serverAction(this, 'Waiting', data, (self, results) => {
+            self.refreshDisplay();
+        });
+        this.elements.message.innerHTML = 'Notification ...';
+    };
+
+    this.changePaid = function (md5Email, amount) {
+        const data = {
+            md5Email: md5Email,
+            ewid: this.ewid,
+            paid: amount
+        };
+        ra.bookings.serverAction(this, 'AdminChangePaid', data, (self, results) => {
+            self.refreshDisplay();
+        });
+    };
+    this.deleteBooker = function (raData) {
+        const data = {
+            md5Email: raData.user.md5Email,
+            ewid: this.ewid
+        };
+        ra.bookings.serverAction(this, 'AdminDeleteSingleBooking', data, (self, results) => {
+            self.refreshDisplay();
+        });
+    };
+    this.deleteWaiting = function (raData) {
+        const data = {
+            md5Email: raData.user.md5Email,
+            ewid: this.ewid
+        };
+        ra.bookings.serverAction(this, 'AdminDeleteSingleWaiting', data, (self, results) => {
+            self.refreshDisplay();
+        });
+    };
+    this.emailForm = function (options) {
+        var div = document.createElement("div");
+        div.classList.add('email');
+        div.classList.add('booking');
+        div.style.display = "inline-block";
+        var emailModal = ra.modals.createModal(div, false);
+        this.input.addComment(div, 'title', 'Event', options.subject);
+        this.input.addComment(div, 'to', 'You are emailing', options.toWhom);
+        this.input.addHtmlArea(div, 'desc', "Content:", 10, options, 'emailContent', 'Add a description of walk so walkers know what to expect', null);
+        var button = this.input.addButton(div, ['submit', 'link-button', 'tiny', 'button', 'mintcake'], 'Send Email');
+        button.addEventListener('click', (e) => {
+            if (options.emailContent.length < 10) {
+                ra.showMsg('Insufficient content to your email message');
+            } else {
+                button.style.display = 'none';
+                ra.bookings.serverAction(emailModal, options.serverAction, options, (self, results) => {
+                    emailModal.close();
+                });
+            }
+        });
+    };
+};
