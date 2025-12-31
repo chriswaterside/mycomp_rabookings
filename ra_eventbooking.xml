@@ -42,15 +42,12 @@
         <filename>joomla.asset.json</filename>
     </media>
     <languages folder="site/languages">
-        
-			<language tag="en-GB">en-GB/com_ra_eventbooking.ini</language>
+        <language tag="en-GB">en-GB/en-GB.com_ra_eventbooking.ini</language>
     </languages>
     <administration>
         <menu>COM_RA_EVENTBOOKING</menu>
         <submenu>
-            
-			<menu link="option=com_ra_eventbooking&amp;view=eventsettings" view="eventsettings" alt="Ra_eventbooking/Eventsettings">COM_RA_EVENTBOOKING_TITLE_EVENTSETTINGS</menu>
-
+            <menu link="option=com_ra_eventbooking&amp;view=eventsettings" view="eventsettings" alt="Ra_eventbooking/Eventsettings">COM_RA_EVENTBOOKING_TITLE_EVENTSETTINGS</menu>
         </submenu>
         <files folder="administrator">
             <filename>access.xml</filename>
@@ -63,9 +60,8 @@
             <folder>sql</folder>
         </files>
         <languages folder="administrator/languages">
-            
-			<language tag="en-GB">en-GB/com_ra_eventbooking.ini</language>
-			<language tag="en-GB">en-GB/com_ra_eventbooking.sys.ini</language>
+            <language tag="en-GB">en-GB/en-GB.com_ra_eventbooking.ini</language>
+            <language tag="en-GB">en-GB/en-GB.com_ra_eventbooking.sys.ini</language>
         </languages>
     </administration>
     <config>
