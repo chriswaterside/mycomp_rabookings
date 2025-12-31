@@ -39,6 +39,7 @@
     <media destination="com_ra_eventbooking" folder="media">
         <folder>css</folder>
         <folder>js</folder>
+        <folder>icons</folder>
         <filename>joomla.asset.json</filename>
     </media>
     <languages folder="site/languages">

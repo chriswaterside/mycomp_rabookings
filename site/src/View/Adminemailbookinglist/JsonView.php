@@ -35,7 +35,7 @@ class JsonView extends BaseJsonView {
             $ewid = $data->ewid;
             $user = $data->user;
             $ebRecord = helper::getEVBrecord($ewid, "Internal");
-            $bookinglist = $ebRecord->blc->getBookingTable();
+            $bookinglist = $ebRecord->blc->getBookingTable($ebRecord->payment_required);
 
             $juser = Factory::getUser();
             $to = [helper::getSendTo($juser->name, $juser->email)];

@@ -296,8 +296,10 @@ class Ra_eventbookingHelper {
             $groupContactName = $euser->name;
             $groupContactEmail = $euser->email;
         }
-        $user= new class{};
-         $user->name = $groupContactName;
+        $user = new class {
+            
+        };
+        $user->name = $groupContactName;
         $user->email = $groupContactEmail;
 
         return $user;
@@ -423,7 +425,9 @@ class Ra_eventbookingHelper {
 
     public static function getUserData() {
         $juser = Factory::getUser();
-        $user = new class{};
+        $user = new class {
+            
+        };
         $user->id = $juser->id;
         $user->name = $juser->name;
         $user->email = md5($juser->email);
@@ -447,7 +451,9 @@ class Ra_eventbookingHelper {
 
     public static function getSettings() {
         $componentParams = ComponentHelper::getParams('com_ra_eventbooking');
-        $settings =  new class{};
+        $settings = new class {
+            
+        };
         $id = $componentParams->get('group_booking_contact', 0);
         If ($id === 0) {
             throw new \RuntimeException('Group Booking Contact not set - contact group');
@@ -537,7 +543,7 @@ class blc implements \JsonSerializable {
         return $to;
     }
 
-    public function getBookingTable() {
+    public function getBookingTable($paid = false) {
         $out = "<table>";
         $out .= "<caption>";
         $out .= "Booking list for this event";
@@ -548,12 +554,14 @@ class blc implements \JsonSerializable {
         $out .= "<th>Email</th>";
         $out .= "<th>Telephone</th>";
         $out .= "<th>Attendees</th>";
-        $out .= "<th>Paid</th>";
+        if ($paid) {
+            $out .= "<th>Paid</th>";
+        }
         $out .= "</tr></thead>";
         $out .= "<tbody>";
 
         foreach ($this->items as $item) {
-            $out .= $item->getTableRow();
+            $out .= $item->getTableRow($paid);
         }
         $out .= "</tbody>";
         $out .= "</table>";
@@ -618,13 +626,15 @@ class bli implements \JsonSerializable {
         return md5($this->email);
     }
 
-    public function getTableRow() {
+    public function getTableRow($paid) {
         $out = "<tr>";
         $out .= '<td>' . $this->name . '</td>';
         $out .= '<td>' . $this->email . '</td>';
         $out .= '<td>' . $this->telephone . '</td>';
         $out .= '<td>' . $this->noAttendees . '</td>';
-        $out .= '<td>' . $this->paid . '</td>';
+        if ($paid) {
+            $out .= '<td>' . $this->paid . '</td>';
+        }
         $out .= "</tr>";
         return $out;
     }
