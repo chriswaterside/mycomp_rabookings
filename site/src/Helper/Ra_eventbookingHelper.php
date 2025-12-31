@@ -26,6 +26,8 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Uri\Uri;
 use \Joomla\CMS\MVC\Model\BaseDatabaseModel;
 use Joomla\CMS\Component\ComponentHelper;
+//use Joomla\CMS\Factory;
+use Joomla\CMS\Mail\MailerFactoryInterface;
 
 /**
  * Class Ra_eventbookingFrontendHelper
@@ -77,18 +79,6 @@ class Ra_eventbookingHelper {
         return $permission;
     }
 
-//    public static function saveStringToFile($text) {
-//// Generate a unique temporary file path
-//        $tempFile = tempnam(sys_get_temp_dir(), 'joomla_');
-//
-//// Write your string data to the file
-//        file_put_contents($tempFile, $text);
-//
-//// The variable $tempFile now holds the file path for use with addAttachment()
-//// After emailing, consider deleting the file: unlink($tempFile);
-//        return $tempFile;
-//    }
-
     public static function loadScripts() {
         \RLoad::addStyleSheet("media/com_ra_eventbooking/css/style.css");
         \RLoad::addScript("media/com_ra_eventbooking/js/ra.bookings.js");
@@ -102,10 +92,10 @@ class Ra_eventbookingHelper {
 
     public static function getPostedData() {
         $input = Factory::getApplication()->getInput();
-// Retrieve individual parameters
+        // Retrieve individual parameters
         $jsonData = $input->POST->get('data', '', 'raw');
         $data = \json_decode($jsonData);
-// Check if decoding was successful
+        // Check if decoding was successful
         if (\json_last_error() !== JSON_ERROR_NONE) {
             throw new \RuntimeException('Invalid JSON data received.');
         }
@@ -117,7 +107,7 @@ class Ra_eventbookingHelper {
         $query = $db->getQuery(true);
         $names = array('event_id');
         $query->select($db->quoteName($names));
-        $query->from($db->quoteName('#__ra_event_settings'));
+        $query->from($db->quoteName('#__ra_event_bookings'));
         $query->where($db->quoteName('state') . ' = 1 ');
 
         $db->setQuery($query);
@@ -142,9 +132,9 @@ class Ra_eventbookingHelper {
         $query = $db->getQuery(true);
         $names = array('max_places', 'booking_data', 'waiting_list_data', 'event_data',
             'payment_required', 'payment_details',
-            'event_contact_name', 'event_contact_email');
+            'booking_contact_id');
         $query->select($db->quoteName($names));
-        $query->from($db->quoteName('#__ra_event_settings'));
+        $query->from($db->quoteName('#__ra_event_bookings'));
         $query->where($db->quoteName('state') . ' = 1 ');
         $query->where($db->quoteName('event_id') . ' = ' . $ewid . ' ');
 
@@ -179,9 +169,9 @@ class Ra_eventbookingHelper {
         $query = $db->getQuery(true);
         $names = array('event_id', 'max_places', 'booking_data', 'waiting_list_data', 'event_data',
             'payment_required', 'payment_details',
-            'event_contact_name', 'event_contact_email');
+            'booking_contact_id');
         $query->select($db->quoteName($names));
-        $query->from($db->quoteName('#__ra_event_settings'));
+        $query->from($db->quoteName('#__ra_event_bookings'));
         $query->where($db->quoteName('state') . ' = 1 ');
 // loop events!
         $db->setQuery($query);
@@ -276,7 +266,7 @@ class Ra_eventbookingHelper {
             $db->quoteName('event_id') . ' = :event_id'
         );
 
-        $query->update($db->quoteName('#__ra_event_settings'))->set($fields)->where($conditions);
+        $query->update($db->quoteName('#__ra_event_bookings'))->set($fields)->where($conditions);
 
         $query
                 ->bind(':field', $value, $varType)
@@ -301,24 +291,28 @@ class Ra_eventbookingHelper {
         $juser = Factory::getUser($id);
         $groupContactName = $juser->name;
         $groupContactEmail = $juser->email;
-        $user = new \stdClass();
-        $user->name = $groupContactName;
-        $user->email = $groupContactEmail;
-        if ($evb->event_contact_email !== '') {
-            $user->name = $evb->event_contact_name;
-            $user->email = $evb->event_contact_email;
+        if ($evb->booking_contact_id !== 0) {
+            $euser = Factory::getUser($id);
+            $groupContactName = $euser->name;
+            $groupContactEmail = $euser->email;
         }
+        $user= new class{};
+         $user->name = $groupContactName;
+        $user->email = $groupContactEmail;
+
         return $user;
     }
 
-    public static function sendEmails($sendToArray, $copy, $replyTo, $subject, $content) {
+    public static function sendEmails($sendToArray, $copy, $replyTo, $subject, $content, $attach = null) {
         $config = Factory::getConfig();
         $sender = array(
             $config->get('mailfrom'),
             $config->get('fromname')
         );
 
-        $mailer = Factory::getMailer();
+        $container = Factory::getContainer();
+        $mailer = $container->get(MailerFactoryInterface::class)->createMailer();
+        //$mailer = Factory::getMailer();
         $mailer->isHtml(true);
         $mailer->Encoding = '8bit';
         $mailer->setSender($sender);
@@ -326,8 +320,11 @@ class Ra_eventbookingHelper {
             $mailer->addReplyTo($replyTo->email, $replyTo->name);
         }
         $mailer->setSubject($subject);
-        //  $mailer->AltBody = '$textBody';
-
+        if ($attach !== null) {
+            if ($attach->type === 'string') {
+                self::addStringAttachment($mailer, $attach);
+            }
+        }
         foreach ($sendToArray as $sendTo) {
             $mailer->clearAllRecipients();
             $mailer->addRecipient($sendTo->getEmail(), $sendTo->getName());
@@ -345,6 +342,29 @@ class Ra_eventbookingHelper {
                 Log::add('Unable to send email to ' . $sendTo->getName(), Log::ERROR, 'com_ra_eventbooking');
             }
         }
+    }
+
+    private static function addStringAttachment($mailer, $attach) {
+        // Your string content, e.g. ICS
+        $filename = $attach->filename;
+        $encoding = $attach->encoding;
+        $mimeType = $attach->mimeType;
+        $contents = $attach->data;
+
+        // Get Joomla tmp path from configuration
+        $config = Factory::getConfig();
+        $tmpPath = rtrim($config->get('tmp_path'), '/');  // e.g. /path/to/site/tmp
+        // Build a unique filename
+        $file = $tmpPath . '/ics_' . uniqid() . '.ics';
+
+        // Write the string into the file
+        file_put_contents($file, $contents);
+
+        // Now $file is a real file you can attach:
+        $mailer->addAttachment($file, $filename, $encoding, $mimeType);
+
+        // Optionally delete after sending:
+        //  @unlink($file);
     }
 
     public static function getEmailTitle($action, $ew) {
@@ -403,7 +423,7 @@ class Ra_eventbookingHelper {
 
     public static function getUserData() {
         $juser = Factory::getUser();
-        $user = new \stdClass();
+        $user = new class{};
         $user->id = $juser->id;
         $user->name = $juser->name;
         $user->email = md5($juser->email);
@@ -427,7 +447,7 @@ class Ra_eventbookingHelper {
 
     public static function getSettings() {
         $componentParams = ComponentHelper::getParams('com_ra_eventbooking');
-        $settings = new \stdClass();
+        $settings =  new class{};
         $id = $componentParams->get('group_booking_contact', 0);
         If ($id === 0) {
             throw new \RuntimeException('Group Booking Contact not set - contact group');

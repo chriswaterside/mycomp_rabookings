@@ -11,7 +11,7 @@
             label="COM_RA_EVENTBOOKING_FIELDSET_ITEM_ID_SELECT_LABEL">
             <field
                 name="id"
-                query="SELECT `id`, `event_id` FROM #__ra_event_settings ORDER BY `id`"
+                query="SELECT `id`, `event_id` FROM #__ra_event_bookings ORDER BY `id`"
                 type="sql"
                 key_field="id" 
                 value_field="event_id"

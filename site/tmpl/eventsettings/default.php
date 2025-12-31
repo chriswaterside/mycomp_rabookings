@@ -22,15 +22,15 @@ HTMLHelper::_('bootstrap.tooltip');
 HTMLHelper::_('behavior.multiselect');
 HTMLHelper::_('formbehavior.chosen', 'select');
 
-$user       = Factory::getApplication()->getIdentity();
-$userId     = $user->get('id');
-$listOrder  = $this->state->get('list.ordering');
-$listDirn   = $this->state->get('list.direction');
-$canCreate  = $user->authorise('core.create', 'com_ra_eventbooking') && file_exists(JPATH_COMPONENT . DIRECTORY_SEPARATOR . 'forms' . DIRECTORY_SEPARATOR . 'eventsettingform.xml');
-$canEdit    = $user->authorise('core.edit', 'com_ra_eventbooking') && file_exists(JPATH_COMPONENT .  DIRECTORY_SEPARATOR . 'forms' . DIRECTORY_SEPARATOR . 'eventsettingform.xml');
+$user = Factory::getApplication()->getIdentity();
+$userId = $user->get('id');
+$listOrder = $this->state->get('list.ordering');
+$listDirn = $this->state->get('list.direction');
+$canCreate = $user->authorise('core.create', 'com_ra_eventbooking') && file_exists(JPATH_COMPONENT . DIRECTORY_SEPARATOR . 'forms' . DIRECTORY_SEPARATOR . 'eventsettingform.xml');
+$canEdit = $user->authorise('core.edit', 'com_ra_eventbooking') && file_exists(JPATH_COMPONENT . DIRECTORY_SEPARATOR . 'forms' . DIRECTORY_SEPARATOR . 'eventsettingform.xml');
 $canCheckin = $user->authorise('core.manage', 'com_ra_eventbooking');
-$canChange  = $user->authorise('core.edit.state', 'com_ra_eventbooking');
-$canDelete  = $user->authorise('core.delete', 'com_ra_eventbooking');
+$canChange = $user->authorise('core.edit.state', 'com_ra_eventbooking');
+$canDelete = $user->authorise('core.delete', 'com_ra_eventbooking');
 
 // Import CSS
 $wa = $this->document->getWebAssetManager();
@@ -41,145 +41,138 @@ $wa->useStyle('com_ra_eventbooking.list');
     <div class="page-header">
         <h1> <?php echo $this->escape($this->params->get('page_heading')); ?> </h1>
     </div>
-<?php endif;?>
+<?php endif; ?>
 <form action="<?php echo htmlspecialchars(Uri::getInstance()->toString()); ?>" method="post"
-	  name="adminForm" id="adminForm">
-	<?php if(!empty($this->filterForm)) { echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this)); } ?>
-	<div class="table-responsive">
-		<table class="table table-striped" id="eventsettingList">
-			<thead>
-			<tr>
-				
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_ID', 'a.id', $listDirn, $listOrder); ?>
-					</th>
+      name="adminForm" id="adminForm">
+          <?php
+          if (!empty($this->filterForm)) {
+              echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this));
+          }
+          ?>
+    <div class="table-responsive">
+        <table class="table table-striped" id="eventsettingList">
+            <thead>
+                <tr>
 
-					<th >
-						<?php echo HTMLHelper::_('grid.sort', 'JPUBLISHED', 'a.state', $listDirn, $listOrder); ?>
-					</th>
+                    <th class=''>
+                        <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_ID', 'a.id', $listDirn, $listOrder); ?>
+                    </th>
 
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_EVENT_ID', 'a.event_id', $listDirn, $listOrder); ?>
-					</th>
+                    <th >
+                        <?php echo HTMLHelper::_('grid.sort', 'JPUBLISHED', 'a.state', $listDirn, $listOrder); ?>
+                    </th>
 
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_EVENT_CONTACT_NAME', 'a.event_contact_name', $listDirn, $listOrder); ?>
-					</th>
+                    <th class=''>
+                        <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_EVENT_ID', 'a.event_id', $listDirn, $listOrder); ?>
+                    </th>
+                    <th class=''>
+                        <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_BOOKING_CONTACT_NAME', 'a.event_contact_name', $listDirn, $listOrder); ?>
+                    </th>
 
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_EVENT_CONTACT_EMAIL', 'a.event_contact_email', $listDirn, $listOrder); ?>
-					</th>
+                    <th class=''>
+                        <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_MAX_PLACES', 'a.max_places', $listDirn, $listOrder); ?>
+                    </th>
 
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_MAX_PLACES', 'a.max_places', $listDirn, $listOrder); ?>
-					</th>
+                    <th class=''>
+                        <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_PAYMENT_REQUIRED', 'a.payment_required', $listDirn, $listOrder); ?>
+                    </th>
 
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_PAYMENT_REQUIRED', 'a.payment_required', $listDirn, $listOrder); ?>
-					</th>
+                    <?php if ($canEdit || $canDelete): ?>
+                        <th class="center">
+                            <?php echo Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_ACTIONS'); ?>
+                        </th>
+                    <?php endif; ?>
 
-					<th class=''>
-						<?php echo HTMLHelper::_('grid.sort',  'COM_RA_EVENTBOOKING_EVENTSETTINGS_CREATION_DATE', 'a.creation_date', $listDirn, $listOrder); ?>
-					</th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <td colspan="<?php echo isset($this->items[0]) ? count(get_object_vars($this->items[0])) : 10; ?>">
+                        <div class="pagination">
+                            <?php echo $this->pagination->getPagesLinks(); ?>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
+            <tbody>
+                <?php foreach ($this->items as $i => $item) : ?>
+                    <?php $canEdit = $user->authorise('core.edit', 'com_ra_eventbooking'); ?>
+                    <?php if (!$canEdit && $user->authorise('core.edit.own', 'com_ra_eventbooking')): ?>
+                        <?php $canEdit = Factory::getApplication()->getIdentity()->id == $item->created_by; ?>
+                    <?php endif; ?>
 
-						<?php if ($canEdit || $canDelete): ?>
-					<th class="center">
-						<?php echo Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_ACTIONS'); ?>
-					</th>
-					<?php endif; ?>
+                    <tr class="row<?php echo $i % 2; ?>">
 
-			</tr>
-			</thead>
-			<tfoot>
-			<tr>
-				<td colspan="<?php echo isset($this->items[0]) ? count(get_object_vars($this->items[0])) : 10; ?>">
-					<div class="pagination">
-						<?php echo $this->pagination->getPagesLinks(); ?>
-					</div>
-				</td>
-			</tr>
-			</tfoot>
-			<tbody>
-			<?php foreach ($this->items as $i => $item) : ?>
-				<?php $canEdit = $user->authorise('core.edit', 'com_ra_eventbooking'); ?>
-				<?php if (!$canEdit && $user->authorise('core.edit.own', 'com_ra_eventbooking')): ?>
-				<?php $canEdit = Factory::getApplication()->getIdentity()->id == $item->created_by; ?>
-				<?php endif; ?>
+                        <td>
+                            <?php echo $item->id; ?>
+                        </td>
+                        <td>
+                            <?php $class = ($canChange) ? 'active' : 'disabled'; ?>
+                            <a class="btn btn-micro <?php echo $class; ?>" href="<?php echo ($canChange) ? Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.publish&id=' . $item->id . '&state=' . (($item->state + 1) % 2), false, 2) : '#'; ?>">
+                                <?php if ($item->state == 1): ?>
+                                    <i class="icon-publish"></i>
+                                <?php else: ?>
+                                    <i class="icon-unpublish"></i>
+                                <?php endif; ?>
+                            </a>
+                        </td>
+                        <td>
+                            <?php $canCheckin = Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_ra_eventbooking.' . $item->id) || $item->checked_out == Factory::getApplication()->getIdentity()->id; ?>
+                            <?php if ($canCheckin && $item->checked_out > 0) : ?>
+                                <a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.checkin&id=' . $item->id . '&' . Session::getFormToken() . '=1'); ?>">
+                                    <?php echo HTMLHelper::_('jgrid.checkedout', $i, $item->uEditor, $item->checked_out_time, 'eventsetting.', false); ?></a>
+                            <?php endif; ?>
+                            <a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&view=eventsetting&id=' . (int) $item->id); ?>">
+                                <?php echo $this->escape($item->event_id); ?></a>
+                        </td>
 
-				<tr class="row<?php echo $i % 2; ?>">
-					
-					<td>
-						<?php echo $item->id; ?>
-					</td>
-					<td>
-						<?php $class = ($canChange) ? 'active' : 'disabled'; ?>
-						<a class="btn btn-micro <?php echo $class; ?>" href="<?php echo ($canChange) ? Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.publish&id=' . $item->id . '&state=' . (($item->state + 1) % 2), false, 2) : '#'; ?>">
-						<?php if ($item->state == 1): ?>
-							<i class="icon-publish"></i>
-						<?php else: ?>
-							<i class="icon-unpublish"></i>
-						<?php endif; ?>
-						</a>
-					</td>
-					<td>
-						<?php $canCheckin = Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_ra_eventbooking.' . $item->id) || $item->checked_out == Factory::getApplication()->getIdentity()->id; ?>
-						<?php if($canCheckin && $item->checked_out > 0) : ?>
-							<a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.checkin&id=' . $item->id .'&'. Session::getFormToken() .'=1'); ?>">
-							<?php echo HTMLHelper::_('jgrid.checkedout', $i, $item->uEditor, $item->checked_out_time, 'eventsetting.', false); ?></a>
-						<?php endif; ?>
-						<a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&view=eventsetting&id='.(int) $item->id); ?>">
-							<?php echo $this->escape($item->event_id); ?></a>
-					</td>
-					<td>
-						<?php echo $item->event_contact_name; ?>
-					</td>
-					<td>
-						<?php echo $item->event_contact_email; ?>
-					</td>
-					<td>
-						<?php echo $item->max_places; ?>
-					</td>
-					<td>
-						<?php echo $item->payment_required; ?>
-					</td>
-					<td>
-						<?php echo $item->creation_date; ?>
-					</td>
-					<?php if ($canEdit || $canDelete): ?>
-						<td class="center">
-							<?php $canCheckin = Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_ra_eventbooking.' . $item->id) || $item->checked_out == Factory::getApplication()->getIdentity()->id; ?>
+                        <?php
+                        echo '<td>' . $item->event_contact_name . '</td>';
 
-							<?php if($canEdit && $item->checked_out == 0): ?>
-								<a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.edit&id=' . $item->id, false, 2); ?>" class="btn btn-mini" type="button"><i class="icon-edit" ></i></a>
-							<?php endif; ?>
-							<?php if ($canDelete): ?>
-								<a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettingform.remove&id=' . $item->id, false, 2); ?>" class="btn btn-mini delete-button" type="button"><i class="icon-trash" ></i></a>
-							<?php endif; ?>
-						</td>
-					<?php endif; ?>
+                        echo '<td>' . $item->max_places . '</td>';
+                        if ($item->payment_required) {
+                            echo '<td>YES</td>';
+                        } else {
+                            echo '<td>No</td>';
+                        }
+                        ?>
 
-				</tr>
-			<?php endforeach; ?>
-			</tbody>
-		</table>
-	</div>
-	<?php if ($canCreate) : ?>
-		<a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettingform.edit&id=0', false, 0); ?>"
-		   class="btn btn-success btn-small"><i
-				class="icon-plus"></i>
-			<?php echo Text::_('COM_RA_EVENTBOOKING_ADD_ITEM'); ?></a>
-	<?php endif; ?>
 
-	<input type="hidden" name="task" value=""/>
-	<input type="hidden" name="boxchecked" value="0"/>
-	<input type="hidden" name="filter_order" value=""/>
-	<input type="hidden" name="filter_order_Dir" value=""/>
-	<?php echo HTMLHelper::_('form.token'); ?>
+                        <?php if ($canEdit || $canDelete): ?>
+                            <td class="center">
+                                <?php $canCheckin = Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_ra_eventbooking.' . $item->id) || $item->checked_out == Factory::getApplication()->getIdentity()->id; ?>
+
+                                <?php if ($canEdit && $item->checked_out == 0): ?>
+                                    <a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.edit&id=' . $item->id, false, 2); ?>" class="btn btn-mini" type="button"><i class="icon-edit" ></i></a>
+                                <?php endif; ?>
+                                <?php if ($canDelete): ?>
+                                    <a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettingform.remove&id=' . $item->id, false, 2); ?>" class="btn btn-mini delete-button" type="button"><i class="icon-trash" ></i></a>
+                                <?php endif; ?>
+                            </td>
+                        <?php endif; ?>
+
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php if ($canCreate) : ?>
+        <a href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettingform.edit&id=0', false, 0); ?>"
+           class="btn btn-success btn-small link-button mintcake"><i
+                class="icon-plus"></i>
+            <?php echo Text::_('COM_RA_EVENTBOOKING_ADD_ITEM'); ?></a>
+        <?php endif; ?>
+
+    <input type="hidden" name="task" value=""/>
+    <input type="hidden" name="boxchecked" value="0"/>
+    <input type="hidden" name="filter_order" value=""/>
+    <input type="hidden" name="filter_order_Dir" value=""/>
+    <?php echo HTMLHelper::_('form.token'); ?>
 </form>
 
 <?php
-	if($canDelete) {
-		$wa->addInlineScript("
+if ($canDelete) {
+    $wa->addInlineScript("
 			jQuery(document).ready(function () {
 				jQuery('.delete-button').click(deleteItem);
 			});
@@ -191,5 +184,5 @@ $wa->useStyle('com_ra_eventbooking.list');
 				}
 			}
 		", [], [], ["jquery"]);
-	}
+}
 ?>

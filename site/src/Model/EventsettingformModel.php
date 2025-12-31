@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @version    CVS: 1.0.0
  * @package    Com_Ra_eventbooking
@@ -8,6 +9,7 @@
  */
 
 namespace Ramblers\Component\Ra_eventbooking\Site\Model;
+
 // No direct access.
 defined('_JEXEC') or die;
 
@@ -24,392 +26,330 @@ use \Joomla\CMS\Helper\TagsHelper;
  *
  * @since  1.0.0
  */
-class EventsettingformModel extends FormModel
-{
-	private $item = null;
+class EventsettingformModel extends FormModel {
 
-	
+    private $item = null;
 
-	
+    /**
+     * Method to auto-populate the model state.
+     *
+     * Note. Calling getState in this method will result in recursion.
+     *
+     * @return  void
+     *
+     * @since   1.0.0
+     *
+     * @throws  Exception
+     */
+    protected function populateState() {
+        $app = Factory::getApplication('com_ra_eventbooking');
 
-	/**
-	 * Method to auto-populate the model state.
-	 *
-	 * Note. Calling getState in this method will result in recursion.
-	 *
-	 * @return  void
-	 *
-	 * @since   1.0.0
-	 *
-	 * @throws  Exception
-	 */
-	protected function populateState()
-	{
-		$app = Factory::getApplication('com_ra_eventbooking');
+        // Load state from the request userState on edit or from the passed variable on default
+        if (Factory::getApplication()->input->get('layout') == 'edit') {
+            $id = Factory::getApplication()->getUserState('com_ra_eventbooking.edit.eventsetting.id');
+        } else {
+            $id = Factory::getApplication()->input->get('id');
+            Factory::getApplication()->setUserState('com_ra_eventbooking.edit.eventsetting.id', $id);
+        }
 
-		// Load state from the request userState on edit or from the passed variable on default
-		if (Factory::getApplication()->input->get('layout') == 'edit')
-		{
-			$id = Factory::getApplication()->getUserState('com_ra_eventbooking.edit.eventsetting.id');
-		}
-		else
-		{
-			$id = Factory::getApplication()->input->get('id');
-			Factory::getApplication()->setUserState('com_ra_eventbooking.edit.eventsetting.id', $id);
-		}
+        $this->setState('eventsetting.id', $id);
 
-		$this->setState('eventsetting.id', $id);
+        // Load the parameters.
+        $params = $app->getParams();
+        $params_array = $params->toArray();
 
-		// Load the parameters.
-		$params       = $app->getParams();
-		$params_array = $params->toArray();
+        if (isset($params_array['item_id'])) {
+            $this->setState('eventsetting.id', $params_array['item_id']);
+        }
 
-		if (isset($params_array['item_id']))
-		{
-				$this->setState('eventsetting.id', $params_array['item_id']);
-		}
+        $this->setState('params', $params);
+    }
 
-		$this->setState('params', $params);
-	}
+    /**
+     * Method to get an object.
+     *
+     * @param   integer $id The id of the object to get.
+     *
+     * @return  Object|boolean Object on success, false on failure.
+     *
+     * @throws  Exception
+     */
+    public function getItem($id = null) {
+        if ($this->item === null) {
+            $this->item = false;
 
-	/**
-	 * Method to get an ojbect.
-	 *
-	 * @param   integer $id The id of the object to get.
-	 *
-	 * @return  Object|boolean Object on success, false on failure.
-	 *
-	 * @throws  Exception
-	 */
-	public function getItem($id = null)
-	{
-		if ($this->item === null)
-		{
-			$this->item = false;
+            if (empty($id)) {
+                $id = $this->getState('eventsetting.id');
+            }
 
-			if (empty($id))
-			{
-				$id = $this->getState('eventsetting.id');
-			}
+            // Get a level row instance.
+            $table = $this->getTable();
+            $properties = $table->getProperties();
+            $this->item = ArrayHelper::toObject($properties, CMSObject::class);
 
-			// Get a level row instance.
-			$table = $this->getTable();
-			$properties = $table->getProperties();
-			$this->item = ArrayHelper::toObject($properties, CMSObject::class);
+            if ($table !== false && $table->load($id) && !empty($table->id)) {
+                $user = Factory::getApplication()->getIdentity();
+                $id = $table->id;
 
-			if ($table !== false && $table->load($id) && !empty($table->id))
-			{
-				$user = Factory::getApplication()->getIdentity();
-				$id   = $table->id;
-				
+                $canEdit = $user->authorise('core.edit', 'com_ra_eventbooking') || $user->authorise('core.create', 'com_ra_eventbooking');
 
-				$canEdit = $user->authorise('core.edit', 'com_ra_eventbooking') || $user->authorise('core.create', 'com_ra_eventbooking');
+                if (!$canEdit && $user->authorise('core.edit.own', 'com_ra_eventbooking')) {
+                    $canEdit = $user->id == $table->created_by;
+                }
 
-				if (!$canEdit && $user->authorise('core.edit.own', 'com_ra_eventbooking'))
-				{
-					$canEdit = $user->id == $table->created_by;
-				}
+                if (!$canEdit) {
+                    throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+                }
 
-				if (!$canEdit)
-				{
-					throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-				}
+                // Check published state.
+                if ($published = $this->getState('filter.published')) {
+                    if (isset($table->state) && $table->state != $published) {
+                        return $this->item;
+                    }
+                }
 
-				// Check published state.
-				if ($published = $this->getState('filter.published'))
-				{
-					if (isset($table->state) && $table->state != $published)
-					{
-						return $this->item;
-					}
-				}
+                // Convert the Table to a clean CMSObject.
+                $properties = $table->getProperties(1);
+                $this->item = ArrayHelper::toObject($properties, CMSObject::class);
+            }
+        }
 
-				// Convert the Table to a clean CMSObject.
-				$properties = $table->getProperties(1);
-				$this->item = ArrayHelper::toObject($properties, CMSObject::class);
-				
+        return $this->item;
+    }
 
-				
-			}
-		}
+    /**
+     * Method to get the table
+     *
+     * @param   string $type   Name of the Table class
+     * @param   string $prefix Optional prefix for the table class name
+     * @param   array  $config Optional configuration array for Table object
+     *
+     * @return  Table|boolean Table if found, boolean false on failure
+     */
+    public function getTable($type = 'Eventsetting', $prefix = 'Administrator', $config = array()) {
+        return parent::getTable($type, $prefix, $config);
+    }
 
-		return $this->item;
-	}
+    /**
+     * Get an item by alias
+     *
+     * @param   string $alias Alias string
+     *
+     * @return int Element id
+     */
+    public function getItemIdByAlias($alias) {
+        $table = $this->getTable();
+        $properties = $table->getProperties();
 
-	/**
-	 * Method to get the table
-	 *
-	 * @param   string $type   Name of the Table class
-	 * @param   string $prefix Optional prefix for the table class name
-	 * @param   array  $config Optional configuration array for Table object
-	 *
-	 * @return  Table|boolean Table if found, boolean false on failure
-	 */
-	public function getTable($type = 'Eventsetting', $prefix = 'Administrator', $config = array())
-	{
-		return parent::getTable($type, $prefix, $config);
-	}
+        if (!in_array('alias', $properties)) {
+            return null;
+        }
 
-	/**
-	 * Get an item by alias
-	 *
-	 * @param   string $alias Alias string
-	 *
-	 * @return int Element id
-	 */
-	public function getItemIdByAlias($alias)
-	{
-		$table      = $this->getTable();
-		$properties = $table->getProperties();
+        $table->load(array('alias' => $alias));
+        $id = $table->id;
 
-		if (!in_array('alias', $properties))
-		{
-				return null;
-		}
+        return $id;
+    }
 
-		$table->load(array('alias' => $alias));
-		$id = $table->id;
+    /**
+     * Method to check in an item.
+     *
+     * @param   integer $id The id of the row to check out.
+     *
+     * @return  boolean True on success, false on failure.
+     *
+     * @since   1.0.0
+     */
+    public function checkin($id = null) {
+        // Get the id.
+        $id = (!empty($id)) ? $id : (int) $this->getState('eventsetting.id');
 
-		
-			return $id;
-		
-	}
+        if ($id) {
+            // Initialise the table
+            $table = $this->getTable();
 
-	/**
-	 * Method to check in an item.
-	 *
-	 * @param   integer $id The id of the row to check out.
-	 *
-	 * @return  boolean True on success, false on failure.
-	 *
-	 * @since   1.0.0
-	 */
-	public function checkin($id = null)
-	{
-		// Get the id.
-		$id = (!empty($id)) ? $id : (int) $this->getState('eventsetting.id');
-		
-		if ($id)
-		{
-			// Initialise the table
-			$table = $this->getTable();
+            // Attempt to check the row in.
+            if (method_exists($table, 'checkin')) {
+                if (!$table->checkin($id)) {
+                    return false;
+                }
+            }
+        }
 
-			// Attempt to check the row in.
-			if (method_exists($table, 'checkin'))
-			{
-				if (!$table->checkin($id))
-				{
-					return false;
-				}
-			}
-		}
+        return true;
+    }
 
-		return true;
-		
-	}
+    /**
+     * Method to check out an item for editing.
+     *
+     * @param   integer $id The id of the row to check out.
+     *
+     * @return  boolean True on success, false on failure.
+     *
+     * @since   1.0.0
+     */
+    public function checkout($id = null) {
+        // Get the user id.
+        $id = (!empty($id)) ? $id : (int) $this->getState('eventsetting.id');
 
-	/**
-	 * Method to check out an item for editing.
-	 *
-	 * @param   integer $id The id of the row to check out.
-	 *
-	 * @return  boolean True on success, false on failure.
-	 *
-	 * @since   1.0.0
-	 */
-	public function checkout($id = null)
-	{
-		// Get the user id.
-		$id = (!empty($id)) ? $id : (int) $this->getState('eventsetting.id');
-		
-		if ($id)
-		{
-			// Initialise the table
-			$table = $this->getTable();
+        if ($id) {
+            // Initialise the table
+            $table = $this->getTable();
 
-			// Get the current user object.
-			$user = Factory::getApplication()->getIdentity();
+            // Get the current user object.
+            $user = Factory::getApplication()->getIdentity();
 
-			// Attempt to check the row out.
-			if (method_exists($table, 'checkout'))
-			{
-				if (!$table->checkout($user->get('id'), $id))
-				{
-					return false;
-				}
-			}
-		}
+            // Attempt to check the row out.
+            if (method_exists($table, 'checkout')) {
+                if (!$table->checkout($user->get('id'), $id)) {
+                    return false;
+                }
+            }
+        }
 
-		return true;
-		
-	}
+        return true;
+    }
 
-	/**
-	 * Method to get the profile form.
-	 *
-	 * The base form is loaded from XML
-	 *
-	 * @param   array   $data     An optional array of data for the form to interogate.
-	 * @param   boolean $loadData True if the form is to load its own data (default case), false if not.
-	 *
-	 * @return  Form    A Form object on success, false on failure
-	 *
-	 * @since   1.0.0
-	 */
-	public function getForm($data = array(), $loadData = true)
-	{
-		// Get the form.
-		$form = $this->loadForm('com_ra_eventbooking.eventsetting', 'eventsettingform', array(
-						'control'   => 'jform',
-						'load_data' => $loadData
-				)
-		);
+    /**
+     * Method to get the profile form.
+     *
+     * The base form is loaded from XML
+     *
+     * @param   array   $data     An optional array of data for the form to interogate.
+     * @param   boolean $loadData True if the form is to load its own data (default case), false if not.
+     *
+     * @return  Form    A Form object on success, false on failure
+     *
+     * @since   1.0.0
+     */
+    public function getForm($data = array(), $loadData = true) {
+        // Get the form.
+        $form = $this->loadForm('com_ra_eventbooking.eventsetting', 'eventsettingform', array(
+            'control' => 'jform',
+            'load_data' => $loadData
+                )
+        );
 
-		if (empty($form))
-		{
-				return false;
-		}
+        if (empty($form)) {
+            return false;
+        }
 
-		return $form;
-	}
+        return $form;
+    }
 
-	/**
-	 * Method to get the data that should be injected in the form.
-	 *
-	 * @return  array  The default data is an empty array.
-	 * @since   1.0.0
-	 */
-	protected function loadFormData()
-	{
-		$data = Factory::getApplication()->getUserState('com_ra_eventbooking.edit.eventsetting.data', array());
+    /**
+     * Method to get the data that should be injected in the form.
+     *
+     * @return  array  The default data is an empty array.
+     * @since   1.0.0
+     */
+    protected function loadFormData() {
+        $data = Factory::getApplication()->getUserState('com_ra_eventbooking.edit.eventsetting.data', array());
 
-		if (empty($data))
-		{
-			$data = $this->getItem();
-		}
+        if (empty($data)) {
+            $data = $this->getItem();
+        }
 
-		if ($data)
-		{
-			
+        if ($data) {
 
-			return $data;
-		}
 
-		return array();
-	}
+            return $data;
+        }
 
-	/**
-	 * Method to save the form data.
-	 *
-	 * @param   array $data The form data
-	 *
-	 * @return  bool
-	 *
-	 * @throws  Exception
-	 * @since   1.0.0
-	 */
-	public function save($data)
-	{
-		$id    = (!empty($data['id'])) ? $data['id'] : (int) $this->getState('eventsetting.id');
-		$state = (!empty($data['state'])) ? 1 : 0;
-		$user  = Factory::getApplication()->getIdentity();
+        return array();
+    }
 
-		
-		if ($id)
-		{
-			// Check the user can edit this item
-			$authorised = $user->authorise('core.edit', 'com_ra_eventbooking') || $authorised = $user->authorise('core.edit.own', 'com_ra_eventbooking');
-		}
-		else
-		{
-			// Check the user can create new items in this section
-			$authorised = $user->authorise('core.create', 'com_ra_eventbooking');
-		}
+    /**
+     * Method to save the form data.
+     *
+     * @param   array $data The form data
+     *
+     * @return  bool
+     *
+     * @throws  Exception
+     * @since   1.0.0
+     */
+    public function save($data) {
+        $id = (!empty($data['id'])) ? $data['id'] : (int) $this->getState('eventsetting.id');
+        $state = (!empty($data['state'])) ? 1 : 0;
+        $user = Factory::getApplication()->getIdentity();
 
-		if ($authorised !== true)
-		{
-			throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-		}
+        if ($id) {
+            // Check the user can edit this item
+            $authorised = $user->authorise('core.edit', 'com_ra_eventbooking') || $authorised = $user->authorise('core.edit.own', 'com_ra_eventbooking');
+        } else {
+            // Check the user can create new items in this section
+            $authorised = $user->authorise('core.create', 'com_ra_eventbooking');
+        }
 
-		$table = $this->getTable();
+        if ($authorised !== true) {
+            throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+        }
 
-		if(!empty($id))
-		{
-			$table->load($id);
-		}
+        $table = $this->getTable();
 
-		
-		
-	try{
-			if ($table->save($data) === true)
-			{
-				return $table->id;
-			}
-			else
-			{
-				Factory::getApplication()->enqueueMessage($table->getError(), 'error');
-				return false;
-			}
-		}catch(\Exception $e)
-		{
-			Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
-			return false;
-		}
-			
-	}
+        if (!empty($id)) {
+            $table->load($id);
+        }
 
-	/**
-	 * Method to delete data
-	 *
-	 * @param   int $pk Item primary key
-	 *
-	 * @return  int  The id of the deleted item
-	 *
-	 * @throws  Exception
-	 *
-	 * @since   1.0.0
-	 */
-	public function delete($id)
-	{
-		$user = Factory::getApplication()->getIdentity();
 
-		
-		if (empty($id))
-		{
-			$id = (int) $this->getState('eventsetting.id');
-		}
 
-		if ($id == 0 || $this->getItem($id) == null)
-		{
-				throw new \Exception(Text::_('COM_RA_EVENTBOOKING_ITEM_DOESNT_EXIST'), 404);
-		}
+        try {
+            if ($table->save($data) === true) {
+                return $table->id;
+            } else {
+                Factory::getApplication()->enqueueMessage($table->getError(), 'error');
+                return false;
+            }
+        } catch (\Exception $e) {
+            Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
+            return false;
+        }
+    }
 
-		if ($user->authorise('core.delete', 'com_ra_eventbooking') !== true)
-		{
-				throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-		}
+    /**
+     * Method to delete data
+     *
+     * @param   int $pk Item primary key
+     *
+     * @return  int  The id of the deleted item
+     *
+     * @throws  Exception
+     *
+     * @since   1.0.0
+     */
+    public function delete($id) {
+        $user = Factory::getApplication()->getIdentity();
 
-		$table = $this->getTable();
+        if (empty($id)) {
+            $id = (int) $this->getState('eventsetting.id');
+        }
 
-		if ($table->delete($id) !== true)
-		{
-				throw new \Exception(Text::_('JERROR_FAILED'), 501);
-		}
+        if ($id == 0 || $this->getItem($id) == null) {
+            throw new \Exception(Text::_('COM_RA_EVENTBOOKING_ITEM_DOESNT_EXIST'), 404);
+        }
 
-		return $id;
-		
-	}
+        if ($user->authorise('core.delete', 'com_ra_eventbooking') !== true) {
+            throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+        }
 
-	/**
-	 * Check if data can be saved
-	 *
-	 * @return bool
-	 */
-	public function getCanSave()
-	{
-		$table = $this->getTable();
+        $table = $this->getTable();
 
-		return $table !== false;
-	}
-	
+        if ($table->delete($id) !== true) {
+            throw new \Exception(Text::_('JERROR_FAILED'), 501);
+        }
+
+        return $id;
+    }
+
+    /**
+     * Check if data can be saved
+     *
+     * @return bool
+     */
+    public function getCanSave() {
+        $table = $this->getTable();
+
+        return $table !== false;
+    }
 }

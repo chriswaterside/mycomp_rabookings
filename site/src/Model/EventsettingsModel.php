@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @version    CVS: 1.0.0
  * @package    Com_Ra_eventbooking
@@ -8,6 +9,7 @@
  */
 
 namespace Ramblers\Component\Ra_eventbooking\Site\Model;
+
 // No direct access.
 defined('_JEXEC') or die;
 
@@ -21,247 +23,216 @@ use \Joomla\Database\ParameterType;
 use \Joomla\Utilities\ArrayHelper;
 use \Ramblers\Component\Ra_eventbooking\Site\Helper\Ra_eventbookingHelper;
 
-
 /**
  * Methods supporting a list of Ra_eventbooking records.
  *
  * @since  1.0.0
  */
-class EventsettingsModel extends ListModel
-{
-	/**
-	 * Constructor.
-	 *
-	 * @param   array  $config  An optional associative array of configuration settings.
-	 *
-	 * @see    JController
-	 * @since  1.0.0
-	 */
-	public function __construct($config = array())
-	{
-		if (empty($config['filter_fields']))
-		{
-			$config['filter_fields'] = array(
-				'id', 'a.id',
-				'state', 'a.state',
-				'ordering', 'a.ordering',
-				'modified_by', 'a.modified_by',
-				'booking_data', 'a.booking_data',
-				'waiting_list_data', 'a.waiting_list_data',
-				'event_data', 'a.event_data',
-				'created_by', 'a.created_by',
-				'event_id', 'a.event_id',
-				'max_places', 'a.max_places',
-				'payment_required', 'a.payment_required',
-				'payment_details', 'a.payment_details',
-				'creation_date', 'a.creation_date',
-				'event_contact_name', 'a.event_contact_name',
-				'event_contact_email', 'a.event_contact_email',
-			);
-		}
+class EventsettingsModel extends ListModel {
 
-		parent::__construct($config);
-	}
+    /**
+     * Constructor.
+     *
+     * @param   array  $config  An optional associative array of configuration settings.
+     *
+     * @see    JController
+     * @since  1.0.0
+     */
+    public function __construct($config = array()) {
+        if (empty($config['filter_fields'])) {
+            $config['filter_fields'] = array(
+                'id', 'a.id',
+                'state', 'a.state',
+                'ordering', 'a.ordering',
+                'modified_by', 'a.modified_by',
+                'booking_data', 'a.booking_data',
+                'waiting_list_data', 'a.waiting_list_data',
+                'event_data', 'a.event_data',
+                'created_by', 'a.created_by',
+                'event_id', 'a.event_id',
+                'max_places', 'a.max_places',
+                'payment_required', 'a.payment_required',
+                'payment_details', 'a.payment_details',
+                'creation_date', 'a.creation_date',
+                'booking_contact_id', 'a.booking_contact_id',
+            );
+        }
 
-	
+        parent::__construct($config);
+    }
 
-	/**
-	 * Method to auto-populate the model state.
-	 *
-	 * Note. Calling getState in this method will result in recursion.
-	 *
-	 * @param   string  $ordering   Elements order
-	 * @param   string  $direction  Order direction
-	 *
-	 * @return  void
-	 *
-	 * @throws  Exception
-	 *
-	 * @since   1.0.0
-	 */
-	protected function populateState($ordering = null, $direction = null)
-	{
-		// List state information.
-		parent::populateState('a.id', 'ASC');
+    /**
+     * Method to auto-populate the model state.
+     *
+     * Note. Calling getState in this method will result in recursion.
+     *
+     * @param   string  $ordering   Elements order
+     * @param   string  $direction  Order direction
+     *
+     * @return  void
+     *
+     * @throws  Exception
+     *
+     * @since   1.0.0
+     */
+    protected function populateState($ordering = null, $direction = null) {
+        // List state information.
+        parent::populateState('a.id', 'ASC');
 
-		$app = Factory::getApplication();
-		$list = $app->getUserState($this->context . '.list');
+        $app = Factory::getApplication();
+        $list = $app->getUserState($this->context . '.list');
 
-		$value = $app->getUserState($this->context . '.list.limit', $app->get('list_limit', 25));
-		$list['limit'] = $value;
-		
-		$this->setState('list.limit', $value);
+        $value = $app->getUserState($this->context . '.list.limit', $app->get('list_limit', 25));
+        $list['limit'] = $value;
 
-		$value = $app->input->get('limitstart', 0, 'uint');
-		$this->setState('list.start', $value);
+        $this->setState('list.limit', $value);
 
-		$ordering  = $this->getUserStateFromRequest($this->context .'.filter_order', 'filter_order', 'a.id');
-		$direction = strtoupper($this->getUserStateFromRequest($this->context .'.filter_order_Dir', 'filter_order_Dir', 'ASC'));
-		
-		if(!empty($ordering) || !empty($direction))
-		{
-			$list['fullordering'] = $ordering . ' ' . $direction;
-		}
+        $value = $app->input->get('limitstart', 0, 'uint');
+        $this->setState('list.start', $value);
 
-		$app->setUserState($this->context . '.list', $list);
+        $ordering = $this->getUserStateFromRequest($this->context . '.filter_order', 'filter_order', 'a.id');
+        $direction = strtoupper($this->getUserStateFromRequest($this->context . '.filter_order_Dir', 'filter_order_Dir', 'ASC'));
 
-		
+        if (!empty($ordering) || !empty($direction)) {
+            $list['fullordering'] = $ordering . ' ' . $direction;
+        }
 
-		$context = $this->getUserStateFromRequest($this->context.'.filter.search', 'filter_search');
-		$this->setState('filter.search', $context);
+        $app->setUserState($this->context . '.list', $list);
 
-		// Split context into component and optional section
-		if (!empty($context))
-		{
-			$parts = FieldsHelper::extract($context);
+        $context = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
+        $this->setState('filter.search', $context);
 
-			if ($parts)
-			{
-				$this->setState('filter.component', $parts[0]);
-				$this->setState('filter.section', $parts[1]);
-			}
-		}
-	}
+        // Split context into component and optional section
+        if (!empty($context)) {
+            $parts = FieldsHelper::extract($context);
 
-	/**
-	 * Build an SQL query to load the list data.
-	 *
-	 * @return  DatabaseQuery
-	 *
-	 * @since   1.0.0
-	 */
-	protected function getListQuery()
-	{
-			// Create a new query object.
-			$db    = $this->getDbo();
-			$query = $db->getQuery(true);
+            if ($parts) {
+                $this->setState('filter.component', $parts[0]);
+                $this->setState('filter.section', $parts[1]);
+            }
+        }
+    }
 
-			// Select the required fields from the table.
-			$query->select(
-						$this->getState(
-								'list.select', 'DISTINCT a.*'
-						)
-				);
+    /**
+     * Build an SQL query to load the list data.
+     *
+     * @return  DatabaseQuery
+     *
+     * @since   1.0.0
+     */
+    protected function getListQuery() {
+        // Create a new query object.
+        $db = $this->getDbo();
+        $query = $db->getQuery(true);
 
-			$query->from('`#__ra_event_settings` AS a');
-			
-		// Join over the users for the checked out user.
-		$query->select('uc.name AS uEditor');
-		$query->join('LEFT', '#__users AS uc ON uc.id=a.checked_out');
+        // Select the required fields from the table.
+        $query->select(
+                $this->getState(
+                        'list.select', 'DISTINCT a.*'
+                )
+        );
 
-		// Join over the created by field 'modified_by'
-		$query->join('LEFT', '#__users AS modified_by ON modified_by.id = a.modified_by');
+        $query->from('`#__ra_event_bookings` AS a');
 
-		// Join over the created by field 'created_by'
-		$query->join('LEFT', '#__users AS created_by ON created_by.id = a.created_by');
-			
-		if (!Factory::getApplication()->getIdentity()->authorise('core.edit', 'com_ra_eventbooking'))
-		{
-			$query->where('a.state = 1');
-		}
-		else
-		{
-			$query->where('(a.state IN (0, 1))');
-		}
+        // Join over the users for the checked out user.
+        $query->select('uc.name AS uEditor');
+        $query->select('ct.name AS event_contact_name');
+        $query->join('LEFT', '#__users AS uc ON uc.id=a.checked_out');
+        $query->join('LEFT', '#__users AS ct ON ct.id=a.booking_contact_id');
 
-			// Filter by search in title
-			$search = $this->getState('filter.search');
+        // Join over the created by field 'modified_by'
+        $query->join('LEFT', '#__users AS modified_by ON modified_by.id = a.modified_by');
 
-			if (!empty($search))
-			{
-				if (stripos($search, 'id:') === 0)
-				{
-					$query->where('a.id = ' . (int) substr($search, 3));
-				}
-				else
-				{
-					$search = $db->Quote('%' . $db->escape($search, true) . '%');
-					$query->where('( a.event_id LIKE ' . $search . '  OR  a.event_contact_name LIKE ' . $search . ' )');
-				}
-			}
-			
+        // Join over the created by field 'created_by'
+        $query->join('LEFT', '#__users AS created_by ON created_by.id = a.created_by');
 
-		// Filtering creation_date
-		$filter_creation_date_from = $this->state->get("filter.creation_date.from");
+        if (!Factory::getApplication()->getIdentity()->authorise('core.edit', 'com_ra_eventbooking')) {
+            $query->where('a.state = 1');
+        } else {
+            $query->where('(a.state IN (0, 1))');
+        }
 
-		if ($filter_creation_date_from !== null && !empty($filter_creation_date_from))
-		{
-			$query->where("a.`creation_date` >= '".$db->escape($filter_creation_date_from)."'");
-		}
-		$filter_creation_date_to = $this->state->get("filter.creation_date.to");
+        // Filter by search in title
+        $search = $this->getState('filter.search');
 
-		if ($filter_creation_date_to !== null  && !empty($filter_creation_date_to))
-		{
-			$query->where("a.`creation_date` <= '".$db->escape($filter_creation_date_to)."'");
-		}
+        if (!empty($search)) {
+            if (stripos($search, 'id:') === 0) {
+                $query->where('a.id = ' . (int) substr($search, 3));
+            } else {
+                $search = $db->Quote('%' . $db->escape($search, true) . '%');
+                $query->where('( a.event_id LIKE ' . $search . '  )');
+            }
+        }
 
-			
-			
-			// Add the list ordering clause.
-			$orderCol  = $this->state->get('list.ordering', 'a.id');
-			$orderDirn = $this->state->get('list.direction', 'ASC');
 
-			if ($orderCol && $orderDirn)
-			{
-				$query->order($db->escape($orderCol . ' ' . $orderDirn));
-			}
+        // Filtering creation_date
+        $filter_creation_date_from = $this->state->get("filter.creation_date.from");
 
-			return $query;
-	}
+        if ($filter_creation_date_from !== null && !empty($filter_creation_date_from)) {
+            $query->where("a.`creation_date` >= '" . $db->escape($filter_creation_date_from) . "'");
+        }
+        $filter_creation_date_to = $this->state->get("filter.creation_date.to");
 
-	/**
-	 * Method to get an array of data items
-	 *
-	 * @return  mixed An array of data on success, false on failure.
-	 */
-	public function getItems()
-	{
-		$items = parent::getItems();
-		
+        if ($filter_creation_date_to !== null && !empty($filter_creation_date_to)) {
+            $query->where("a.`creation_date` <= '" . $db->escape($filter_creation_date_to) . "'");
+        }
 
-		return $items;
-	}
+        // Add the list ordering clause.
+        $orderCol = $this->state->get('list.ordering', 'a.id');
+        $orderDirn = $this->state->get('list.direction', 'ASC');
 
-	/**
-	 * Overrides the default function to check Date fields format, identified by
-	 * "_dateformat" suffix, and erases the field if it's not correct.
-	 *
-	 * @return void
-	 */
-	protected function loadFormData()
-	{
-		$app              = Factory::getApplication();
-		$filters          = $app->getUserState($this->context . '.filter', array());
-		$error_dateformat = false;
+        if ($orderCol && $orderDirn) {
+            $query->order($db->escape($orderCol . ' ' . $orderDirn));
+        }
 
-		foreach ($filters as $key => $value)
-		{
-			if (strpos($key, '_dateformat') && !empty($value) && $this->isValidDate($value) == null)
-			{
-				$filters[$key]    = '';
-				$error_dateformat = true;
-			}
-		}
+        return $query;
+    }
 
-		if ($error_dateformat)
-		{
-			$app->enqueueMessage(Text::_("COM_RA_EVENTBOOKING_SEARCH_FILTER_DATE_FORMAT"), "warning");
-			$app->setUserState($this->context . '.filter', $filters);
-		}
+    /**
+     * Method to get an array of data items
+     *
+     * @return  mixed An array of data on success, false on failure.
+     */
+    public function getItems() {
+        $items = parent::getItems();
+        return $items;
+    }
 
-		return parent::loadFormData();
-	}
+    /**
+     * Overrides the default function to check Date fields format, identified by
+     * "_dateformat" suffix, and erases the field if it's not correct.
+     *
+     * @return void
+     */
+    protected function loadFormData() {
+        $app = Factory::getApplication();
+        $filters = $app->getUserState($this->context . '.filter', array());
+        $error_dateformat = false;
 
-	/**
-	 * Checks if a given date is valid and in a specified format (YYYY-MM-DD)
-	 *
-	 * @param   string  $date  Date to be checked
-	 *
-	 * @return bool
-	 */
-	private function isValidDate($date)
-	{
-		$date = str_replace('/', '-', $date);
-		return (date_create($date)) ? Factory::getDate($date)->format("Y-m-d") : null;
-	}
+        foreach ($filters as $key => $value) {
+            if (strpos($key, '_dateformat') && !empty($value) && $this->isValidDate($value) == null) {
+                $filters[$key] = '';
+                $error_dateformat = true;
+            }
+        }
+
+        if ($error_dateformat) {
+            $app->enqueueMessage(Text::_("COM_RA_EVENTBOOKING_SEARCH_FILTER_DATE_FORMAT"), "warning");
+            $app->setUserState($this->context . '.filter', $filters);
+        }
+
+        return parent::loadFormData();
+    }
+
+    /**
+     * Checks if a given date is valid and in a specified format (YYYY-MM-DD)
+     *
+     * @param   string  $date  Date to be checked
+     *
+     * @return bool
+     */
+    private function isValidDate($date) {
+        $date = str_replace('/', '-', $date);
+        return (date_create($date)) ? Factory::getDate($date)->format("Y-m-d") : null;
+    }
 }

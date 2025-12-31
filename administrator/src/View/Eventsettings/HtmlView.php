@@ -162,8 +162,7 @@ class HtmlView extends BaseHtmlView
 			'a.`max_places`' => Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_MAX_PLACES'),
 			'a.`payment_required`' => Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_PAYMENT_REQUIRED'),
 			'a.`creation_date`' => Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_CREATION_DATE'),
-			'a.`event_contact_name`' => Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_EVENT_CONTACT_NAME'),
-			'a.`event_contact_email`' => Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_EVENT_CONTACT_EMAIL'),
+			'a.`booking_contact_id`' => Text::_('COM_RA_EVENTBOOKING_EVENTSETTINGS_BOOKING_CONTACT_NAME'),
 		);
 	}
 

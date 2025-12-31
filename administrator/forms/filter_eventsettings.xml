@@ -5,15 +5,13 @@
                label="COM_USERS_FILTER_SEARCH_DESC"
                class="js-stools-search-string" />
         <field name="state"
-							type="status"
-							label="COM_RA_EVENTBOOKING_FILTER_STATE"
-							description="COM_RA_EVENTBOOKING_FILTER_STATE_DESC"
-							onchange="this.form.submit();">
-							<option value="">JOPTION_SELECT_PUBLISHED</option>
-						</field>
-        <field name="creation_date.from" label="COM_RA_EVENTBOOKING_EVENTSETTINGS_CREATION_DATE_FILTER_FROM" type="calendar" onchange="this.form.submit();" filter="safehtml" class="inputbox" showtime="true" translateformat="true" hint="COM_RA_EVENTBOOKING_EVENTSETTINGS_CREATION_DATE_FILTER_FROM"/>
-<field name="creation_date.to" label="COM_RA_EVENTBOOKING_EVENTSETTINGS_CREATION_DATE_FILTER_TO" type="calendar" onchange="this.form.submit();" filter="safehtml" class="inputbox" showtime="true" translateformat="true" hint="COM_RA_EVENTBOOKING_EVENTSETTINGS_CREATION_DATE_FILTER_TO"/>
-
+               type="status"
+               label="COM_RA_EVENTBOOKING_FILTER_STATE"
+               description="COM_RA_EVENTBOOKING_FILTER_STATE_DESC"
+               onchange="this.form.submit();">
+            <option value="">JOPTION_SELECT_PUBLISHED</option>
+        </field>
+ 
 
     </fields>
 
@@ -27,11 +25,26 @@
                default="a.id DESC"
         >
             <option value="">JGLOBAL_SORT_BY</option>
-            <option value="a.id ASC">COM_RA_EVENTBOOKING_ID_ASC</option><option value="a.id DESC">COM_RA_EVENTBOOKING_ID_DESC</option><option value="a.state ASC">COM_RA_EVENTBOOKING_STATE_ASC</option><option value="a.state DESC">COM_RA_EVENTBOOKING_STATE_DESC</option><option value="a.ordering ASC">COM_RA_EVENTBOOKING_ORDERING_ASC</option><option value="a.ordering DESC">COM_RA_EVENTBOOKING_ORDERING_DESC</option><option value="a.event_id ASC">COM_RA_EVENTBOOKING_EVENT_ID_ASC</option><option value="a.event_id DESC">COM_RA_EVENTBOOKING_EVENT_ID_DESC</option><option value="a.max_places ASC">COM_RA_EVENTBOOKING_MAX_PLACES_ASC</option><option value="a.max_places DESC">COM_RA_EVENTBOOKING_MAX_PLACES_DESC</option><option value="a.payment_required ASC">COM_RA_EVENTBOOKING_PAYMENT_REQUIRED_ASC</option><option value="a.payment_required DESC">COM_RA_EVENTBOOKING_PAYMENT_REQUIRED_DESC</option><option value="a.creation_date ASC">COM_RA_EVENTBOOKING_CREATION_DATE_ASC</option><option value="a.creation_date DESC">COM_RA_EVENTBOOKING_CREATION_DATE_DESC</option><option value="a.event_contact_name ASC">COM_RA_EVENTBOOKING_EVENT_CONTACT_NAME_ASC</option><option value="a.event_contact_name DESC">COM_RA_EVENTBOOKING_EVENT_CONTACT_NAME_DESC</option><option value="a.event_contact_email ASC">COM_RA_EVENTBOOKING_EVENT_CONTACT_EMAIL_ASC</option><option value="a.event_contact_email DESC">COM_RA_EVENTBOOKING_EVENT_CONTACT_EMAIL_DESC</option>
+            <option value="a.id ASC">COM_RA_EVENTBOOKING_ID_ASC</option>
+            <option value="a.id DESC">COM_RA_EVENTBOOKING_ID_DESC</option>
+            <option value="a.state ASC">COM_RA_EVENTBOOKING_STATE_ASC</option>
+            <option value="a.state DESC">COM_RA_EVENTBOOKING_STATE_DESC</option>
+            <option value="a.ordering ASC">COM_RA_EVENTBOOKING_ORDERING_ASC</option>
+            <option value="a.ordering DESC">COM_RA_EVENTBOOKING_ORDERING_DESC</option>
+            <option value="a.event_id ASC">COM_RA_EVENTBOOKING_EVENT_ID_ASC</option>
+            <option value="a.event_id DESC">COM_RA_EVENTBOOKING_EVENT_ID_DESC</option>
+            <option value="a.max_places ASC">COM_RA_EVENTBOOKING_MAX_PLACES_ASC</option>
+            <option value="a.max_places DESC">COM_RA_EVENTBOOKING_MAX_PLACES_DESC</option>
+            <option value="a.payment_required ASC">COM_RA_EVENTBOOKING_PAYMENT_REQUIRED_ASC</option>
+            <option value="a.payment_required DESC">COM_RA_EVENTBOOKING_PAYMENT_REQUIRED_DESC</option>
+            <option value="a.creation_date ASC">COM_RA_EVENTBOOKING_CREATION_DATE_ASC</option>
+            <option value="a.creation_date DESC">COM_RA_EVENTBOOKING_CREATION_DATE_DESC</option>
+            <option value="a.event_contact_name ASC">COM_RA_EVENTBOOKING_BOOKING_CONTACT_NAME_ASC</option>
+            <option value="a.event_contact_name DESC">COM_RA_EVENTBOOKING_BOOKING_CONTACT_NAME_DESC</option>
 
         </field>
 
-       <field name="limit"
+        <field name="limit"
                type="limitbox"
                label="COM_RA_EVENTBOOKING_LIST_LIMIT"
                description="COM_RA_EVENTBOOKING_LIST_LIMIT_DESC"

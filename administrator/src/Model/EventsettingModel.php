@@ -171,7 +171,7 @@ class EventsettingModel extends AdminModel
 	{
 		$app = Factory::getApplication();
 		$user = $app->getIdentity();
-        $dispatcher = $this->getDispatcher();
+                $dispatcher = $this->getDispatcher();
 
 		// Access checks.
 		if (!$user->authorise('core.create', 'com_ra_eventbooking'))
@@ -268,7 +268,7 @@ class EventsettingModel extends AdminModel
 			if (@$table->ordering === '')
 			{
 				$db = $this->getDbo();
-				$db->setQuery('SELECT MAX(ordering) FROM #__ra_event_settings');
+				$db->setQuery('SELECT MAX(ordering) FROM #__ra_event_bookings');
 				$max             = $db->loadResult();
 				$table->ordering = $max + 1;
 			}

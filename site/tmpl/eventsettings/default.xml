@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <metadata>
-	<layout title="COM_RA_EVENTBOOKING_TITLE_LIST_VIEW_EVENTSETTINGS" option="View">
+    <layout title="COM_RA_EVENTBOOKING_TITLE_LIST_VIEW_EVENTSETTINGS" option="View">
         <message>
-                        <![CDATA[COM_RA_EVENTBOOKING_TITLE_LIST_VIEW_EVENTSETTINGS_DESC]]>
+            <![CDATA[COM_RA_EVENTBOOKING_TITLE_LIST_VIEW_EVENTSETTINGS_DESC]]>
         </message>
-	</layout>
+    </layout>
 	
 </metadata>

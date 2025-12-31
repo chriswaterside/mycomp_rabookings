@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS `#__ra_event_settings`;
+DROP TABLE IF EXISTS `#__ra_event_bookings`;

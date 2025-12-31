@@ -16,10 +16,11 @@ if (typeof (ra) === "undefined") {
     ra = {};
 }
 
-ra.bookings = function (tag, ewid, ew) {
+ra.bookings = function (tag, ewid, ew, ics) {
     // ew is passed so that it can be sent to server to create email to user
     this.ewid = ewid;
     this.ew = ew;
+    this.ics = ics;
     this.elements = null;
     this.evb = null;
     this.settings = null;
@@ -46,7 +47,7 @@ ra.bookings = function (tag, ewid, ew) {
             var div = document.createElement("div");
             div.style.display = "inline-block";
             self.formModal = ra.modals.createModal(div, false);
-            var form = new ra.bookings.formBooking(self.settings, self.user, self.ewid, self.ew, self.evb);
+            var form = new ra.bookings.formBooking(self.settings, self.user, self.ewid, self.ew, self.evb, self.ics);
             form.display(div);
         });
         document.addEventListener('bookingInfoChanged', function (e) {
@@ -81,7 +82,8 @@ ra.bookings = function (tag, ewid, ew) {
         // if so ask server to email users of change.
         if (this.ew.admin.dateUpdated.toISOString() > this.evb.event_data.dateUpdated || this.evb.event_data.dateUpdated === null) {
             var data = {ewid: this.ewid,
-                ew: JSON.stringify(this.ew)};
+                ew: JSON.stringify(this.ew),
+                ics: self.ics};
             ra.bookings.serverAction(this, 'EventChanged', data, (self, results) => {
 
             });

@@ -20,11 +20,12 @@ if (typeof (ra.bookings) === "undefined") {
     ra.bookings = {};
 }
 
-ra.bookings.formBooking = function (settings, user, ewid, ew, evb) {
+ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
     this.settings = settings;
     this.user = user;
     this.ewid = ewid;
     this.ew = ew;
+    this.ics = ics;
     this.eventTitle = ra.date.dowddmmyyyy(ew.basics.walkDate) + ' ' + ew.basics.title;
     this.evb = evb;
     this.elements = null;
@@ -458,6 +459,7 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb) {
         const data = {
             ewid: this.ewid,
             ew: this.ew,
+            ics: this.ics,
             user: this.user,
             bookingData: this.bookingData
         };

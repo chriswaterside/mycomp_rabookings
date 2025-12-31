@@ -393,11 +393,6 @@ ra.bookings.settings = function (settings) {
         } else {
             this.addLi(elements.contact, "No booking contact defined");
         }
-        if (this.group_contact_email !== '') {
-            this.addLi(elements.contact, "Booking contact email address is set");
-        } else {
-            this.addLi(elements.contact, "Booking contact email address is NOT SET");
-        }
         this.addLi(elements.list, 'Max places that can be booked: ' + this.maxattendees);
         if (this.guest) {
             this.addLi(elements.guestlist, "Guest may book places");
@@ -634,7 +629,7 @@ ra.bookings.evb = function (value) {
             {parent: 'root', tag: 'div', attrs: {class: 'ra bookings'}, innerHTML: 'A payment is required for this walk/event:'},
             {name: 'details', parent: 'root', tag: 'div', attrs: {class: 'booking howtopay'}},
             {parent: 'details', tag: 'div', innerHTML: 'How to pay'},
-            {parent: 'details', tag: 'div', attrs: {class: 'bookingitem walkitem'}, style: {'margin-left': '10px'}, innerHTML: this.payment_details},
+            {parent: 'details', tag: 'div', attrs: {class: 'bookingitem walkitem payment'}, style: {'margin-left': '10px'}, innerHTML: this.payment_details},
             {parent: 'root', tag: 'div', style: {clear: 'both'}}
         ];
         ra.html.generateTags(tag, tags);

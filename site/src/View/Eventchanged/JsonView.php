@@ -31,6 +31,12 @@ class JsonView extends BaseJsonView {
             $feedback = [];
             $data = helper::getPostedData();
             $ewid = $data->ewid;
+            $attach = new \stdClass();
+            $attach->data = $data->ics;
+            $attach->type = 'string';
+            $attach->encoding = 'base64';
+            $attach->filename = 'walk.ics';
+            $attach->mimeType = 'text/calendar';
             $ebRecord = helper::getEVBrecord($ewid, "Internal");
             $ew = json_decode($data->ew);
             $update = new \stdClass();
@@ -45,7 +51,7 @@ class JsonView extends BaseJsonView {
             $replyTo = helper::eventContactEmail($ebRecord);
             $title = helper::getEmailTitle('Event changed', $ew);
             $content = helper::getEmailContent('eventchanged.html', $ew);
-            helper::sendEmails($to, null, $replyTo, $title, $content);
+            helper::sendEmails($to, null, $replyTo, $title, $content, $attach);
 
             $record = new \stdClass();
             $record->feedback = $feedback;
@@ -55,7 +61,7 @@ class JsonView extends BaseJsonView {
             $message = $e->getMessage();
             $file = $e->getFile();
             $line = $e->getLine();
-            Log::add("Exception thrown in $file on line $line: [Code $code] $message",Log::ERROR,'com_ra_eventbooking');
+            Log::add("Exception thrown in $file on line $line: [Code $code] $message", Log::ERROR, 'com_ra_eventbooking');
             echo new JsonResponse($e);
         }
     }

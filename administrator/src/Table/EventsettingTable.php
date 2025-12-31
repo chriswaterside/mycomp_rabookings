@@ -76,7 +76,7 @@ class EventsettingTable extends Table implements VersionableTableInterface, Tagg
 	public function __construct(DatabaseDriver $db)
 	{
 		$this->typeAlias = 'com_ra_eventbooking.eventsetting';
-		parent::__construct('#__ra_event_settings', 'id', $db);
+		parent::__construct('#__ra_event_bookings', 'id', $db);
 		$this->setColumnAlias('published', 'state');
 		
 	}

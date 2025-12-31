@@ -56,7 +56,12 @@ class JsonView extends BaseJsonView {
             $data = helper::getPostedData();
             $ewid = $data->ewid;
             $ew = $data->ew;
-            //  $user = $data->user;
+            $attach = new \stdClass();
+            $attach->data = $data->ics;
+            $attach->type = 'string';
+            $attach->encoding = 'base64';
+            $attach->filename = 'walk.ics';
+            $attach->mimeType = 'text/calendar';
             $bookingData = $data->bookingData;
             if ($bookingData->id > 0) {
                 $juser = \JFactory::getUser($bookingData->id);
@@ -102,7 +107,7 @@ class JsonView extends BaseJsonView {
             $copyTo = helper::eventContactEmail($ebRecord);
             $title = helper::getEmailTitle($action, $ew);
             $content = helper::getEmailContent($emailTemplate, $ew);
-            helper::sendEmails($to, $copyTo, $replyTo, $title, $content);
+            helper::sendEmails($to, $copyTo, $replyTo, $title, $content, $attach);
 
             // return status of booking
             $record = new \stdClass();

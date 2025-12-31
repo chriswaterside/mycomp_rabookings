@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" version="4.0" method="upgrade">
     <name>com_ra_eventbooking</name>
-    <creationDate>2025-09-11</creationDate>
+    <creationDate>2025-12-30</creationDate>
     <copyright>2025 Ruby Tuesday</copyright>
     <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
     <author>Chris Vaughan </author>
     <authorEmail>ruby.tuesday@ramblers-webs.org.uk</authorEmail>
     <authorUrl>http://ramblers-webs.org.uk</authorUrl>
     <version>1.0.2</version>
-    <description>Enable booking of events on a group web site, walks and non walk events</description>
+    <description>Enable booking of events on a group web site, walks and non walking events</description>
     <namespace path="src">Ramblers\Component\Ra_eventbooking</namespace>
     
     

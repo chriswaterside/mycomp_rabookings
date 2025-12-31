@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `#__ra_event_settings` (
+CREATE TABLE IF NOT EXISTS `#__ra_event_bookings` (
 `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 
 `state` TINYINT(1)  NULL  DEFAULT 1,
@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS `#__ra_event_settings` (
 `payment_required` VARCHAR(255)  NULL  DEFAULT "0",
 `payment_details` TEXT NULL ,
 `creation_date` DATETIME NULL  DEFAULT NULL ,
-`event_contact_name` VARCHAR(255)  NULL  DEFAULT "",
-`event_contact_email` VARCHAR(255)  NULL  DEFAULT "",
+`booking_contact_id` INT(11)  NOT NULL ,
 PRIMARY KEY (`id`)
 ,KEY `idx_state` (`state`)
 ,KEY `idx_checked_out` (`checked_out`)
@@ -24,11 +23,11 @@ PRIMARY KEY (`id`)
 ,KEY `idx_created_by` (`created_by`)
 ) DEFAULT COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX `#__ra_event_settings_max_places` ON `#__ra_event_settings`(`max_places`);
+CREATE INDEX `#__ra_event_bookings_max_places` ON `#__ra_event_bookings`(`max_places`);
 
 
 INSERT INTO `#__content_types` (`type_title`, `type_alias`, `table`, `rules`, `field_mappings`, `content_history_options`)
-SELECT * FROM ( SELECT 'Event setting','com_ra_eventbooking.eventsetting','{"special":{"dbtable":"#__ra_event_settings","key":"id","type":"EventsettingTable","prefix":"Joomla\\\\Component\\\\Ra_eventbooking\\\\Administrator\\\\Table\\\\"}}', CASE 
+SELECT * FROM ( SELECT 'Event setting','com_ra_eventbooking.eventsetting','{"special":{"dbtable":"#__ra_event_bookings","key":"id","type":"EventsettingTable","prefix":"Joomla\\\\Component\\\\Ra_eventbooking\\\\Administrator\\\\Table\\\\"}}', CASE 
                                     WHEN 'rules' is null THEN ''
                                     ELSE ''
                                     END as rules, CASE 

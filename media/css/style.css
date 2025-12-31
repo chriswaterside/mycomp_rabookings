@@ -28,6 +28,12 @@ div.ra.bookings.form div.bookingitem{
     font-size: 115%;
     word-break: keep-all;
 }
+div.bookingitem.walkitem.payment {
+    line-height: 1em !important;
+}
+div.bookingitem.walkitem.payment p{
+    margin: 0 0 3px 0 !important;
+}
 div.ra.bookings.verify{
     text-align: center;
 }

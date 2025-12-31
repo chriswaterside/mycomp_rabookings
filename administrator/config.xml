@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <fieldset label="COM_RA_EVENTBOOKING" name="ra_eventbooking">
-        <field name="group_booking_contact" type="user" label="COM_RA_EVENTBOOKING_FORM_LBL_GROUP_CONTACT" description="COM_RA_EVENTBOOKING_FORM_DESC_GROUP_CONTACT"     />
+        <field 
+            name="group_booking_contact" 
+            type="user" 
+            label="COM_RA_EVENTBOOKING_FORM_LBL_GROUP_CONTACT" 
+            description="COM_RA_EVENTBOOKING_FORM_DESC_GROUP_CONTACT" 
+        />
         <field name="group_email_format" type="text" label="COM_RA_EVENTBOOKING_FORM_LBL_GROUP_EMAIL_FORMAT" description="COM_RA_EVENTBOOKING_FORM_DESC_GROUP_EMAIL_FORMAT" hint="COM_RA_EVENTBOOKING_FORM_LBL_GROUP_EMAIL_FORMAT"/>
         <field name="maxattendees" first="1" last="10" step="1" type="integer" label="COM_RA_EVENTBOOKING_FORM_LBL_MAXATTENDEES" description="COM_RA_EVENTBOOKING_FORM_DESC_MAXATTENDEES" hint="COM_RA_EVENTBOOKING_FORM_LBL_MAXATTENDEES"/>
         <field name="guest" type="checkbox" label="COM_RA_EVENTBOOKING_FORM_LBL_GUEST" description="COM_RA_EVENTBOOKING_FORM_DESC_GUEST" hint="COM_RA_EVENTBOOKING_FORM_LBL_GUEST"/>
