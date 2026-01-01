@@ -113,7 +113,8 @@ if (!$canEdit && Factory::getApplication()->getIdentity()->authorise('core.edit.
     <a class="btn btn-danger link-button granite" rel="noopener noreferrer" href="#deleteModal" role="button" data-bs-toggle="modal">
         <?php echo Text::_("COM_RA_EVENTBOOKING_DELETE_ITEM"); ?>
     </a>
-
+    
+    <a class="btn btn-outline-primary link-button granite" href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettings' ); ?>"><?php echo Text::_("COM_RA_EVENTBOOKING_CANCEL_ITEMS"); ?></a>
     <?php
     echo HTMLHelper::_(
             'bootstrap.renderModal',

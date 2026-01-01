@@ -30,10 +30,6 @@ class EventsettingModel extends ItemModel
 {
 	public $_item;
 
-	
-
-	
-
 	/**
 	 * Method to auto-populate the model state.
 	 *

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @version    CVS: 1.0.0
  * @package    Com_Ra_eventbooking
@@ -25,196 +26,171 @@ use \Joomla\Utilities\ArrayHelper;
  *
  * @since  1.6.0
  */
-class EventsettingController extends BaseController
-{
-	/**
-	 * Method to check out an item for editing and redirect to the edit form.
-	 *
-	 * @return  void
-	 *
-	 * @since   1.0.0
-	 *
-	 * @throws  Exception
-	 */
-	public function edit()
-	{
-		// Get the previous edit id (if any) and the current edit id.
-		$previousId = (int) $this->app->getUserState('com_ra_eventbooking.edit.eventsetting.id');
-		$editId     = $this->input->getInt('id', 0);
+class EventsettingController extends BaseController {
 
-		// Set the user id for the user to edit in the session.
-		$this->app->setUserState('com_ra_eventbooking.edit.eventsetting.id', $editId);
+    /**
+     * Method to check out an item for editing and redirect to the edit form.
+     *
+     * @return  void
+     *
+     * @since   1.0.0
+     *
+     * @throws  Exception
+     */
+    public function edit() {
+        // Get the previous edit id (if any) and the current edit id.
+        $previousId = (int) $this->app->getUserState('com_ra_eventbooking.edit.eventsetting.id');
+        $editId = $this->input->getInt('id', 0);
 
-		// Get the model.
-		$model = $this->getModel('Eventsetting', 'Site');
+        // Set the user id for the user to edit in the session.
+        $this->app->setUserState('com_ra_eventbooking.edit.eventsetting.id', $editId);
 
-		// Check out the item
-		if ($editId)
-		{
-			$model->checkout($editId);
-		}
+        // Get the model.
+        $model = $this->getModel('Eventsetting', 'Site');
 
-		// Check in the previous user.
-		if ($previousId && $previousId !== $editId)
-		{
-			$model->checkin($previousId);
-		}
+        // Check out the item
+        if ($editId) {
+            $model->checkout($editId);
+        }
 
-		// Redirect to the edit screen.
-		$this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsettingform&layout=edit', false));
-	}
+        // Check in the previous user.
+        if ($previousId && $previousId !== $editId) {
+            $model->checkin($previousId);
+        }
 
-	/**
-	 * Method to save data
-	 *
-	 * @return    void
-	 *
-	 * @throws  Exception
-	 * @since   1.0.0
-	 */
-	public function publish()
-	{
-		// Checking if the user can remove object
-		$user = $this->app->getIdentity();
+        // Redirect to the edit screen.
+        $this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsettingform&layout=edit', false));
+    }
 
-		if ($user->authorise('core.edit', 'com_ra_eventbooking') || $user->authorise('core.edit.state', 'com_ra_eventbooking'))
-		{
-			$model = $this->getModel('Eventsetting', 'Site');
+    /**
+     * Method to save data
+     *
+     * @return    void
+     *
+     * @throws  Exception
+     * @since   1.0.0
+     */
+    public function publish() {
+        // Checking if the user can remove object
+        $user = $this->app->getIdentity();
 
-			// Get the user data.
-			$id    = $this->input->getInt('id');
-			$state = $this->input->getInt('state');
+        if ($user->authorise('core.edit', 'com_ra_eventbooking') || $user->authorise('core.edit.state', 'com_ra_eventbooking')) {
+            $model = $this->getModel('Eventsetting', 'Site');
 
-			// Attempt to save the data.
-			$return = $model->publish($id, $state);
+            // Get the user data.
+            $id = $this->input->getInt('id');
+            $state = $this->input->getInt('state');
 
-			// Check for errors.
-			if ($return === false)
-			{
-				$this->setMessage(Text::sprintf('Save failed: %s', $model->getError()), 'warning');
-			}
+            // Attempt to save the data.
+            $return = $model->publish($id, $state);
 
-			// Clear the profile id from the session.
-			$this->app->setUserState('com_ra_eventbooking.edit.eventsetting.id', null);
+            // Check for errors.
+            if ($return === false) {
+                $this->setMessage(Text::sprintf('Save failed: %s', $model->getError()), 'warning');
+            }
 
-			// Flush the data from the session.
-			$this->app->setUserState('com_ra_eventbooking.edit.eventsetting.data', null);
+            // Clear the profile id from the session.
+            $this->app->setUserState('com_ra_eventbooking.edit.eventsetting.id', null);
 
-			// Redirect to the list screen.
-			$this->setMessage(Text::_('COM_RA_EVENTBOOKING_ITEM_SAVED_SUCCESSFULLY'));
-			$menu = Factory::getApplication()->getMenu();
-			$item = $menu->getActive();
+            // Flush the data from the session.
+            $this->app->setUserState('com_ra_eventbooking.edit.eventsetting.data', null);
 
-			if (!$item)
-			{
-				// If there isn't any menu item active, redirect to list view
-				$this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsettings', false));
-			}
-			else
-			{
-				$this->setRedirect(Route::_('index.php?Itemid='. $item->id, false));
-			}
-		}
-		else
-		{
-			throw new \Exception(500);
-		}
-	}
+            // Redirect to the list screen.
+            $this->setMessage(Text::_('COM_RA_EVENTBOOKING_ITEM_SAVED_SUCCESSFULLY'));
+            $menu = Factory::getApplication()->getMenu();
+            $item = $menu->getActive();
 
-	/**
-	 * Check in record
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since   1.0.0
-	 */
-	public function checkin()
-	{
-		// Check for request forgeries.
-		$this->checkToken('GET');
+            if (!$item) {
+                // If there isn't any menu item active, redirect to list view
+                $this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsettings', false));
+            } else {
+                $this->setRedirect(Route::_('index.php?Itemid=' . $item->id, false));
+            }
+        } else {
+            throw new \Exception(500);
+        }
+    }
 
-		$id 	= $this->input->getInt('id', 0);
-		$model 	= $this->getModel();
-		$item 	= $model->getItem($id);
+    /**
+     * Check in record
+     *
+     * @return  boolean  True on success
+     *
+     * @since   1.0.0
+     */
+    public function checkin() {
+        // Check for request forgeries.
+        $this->checkToken('GET');
 
-		// Checking if the user can remove object
-		$user = $this->app->getIdentity();
+        $id = $this->input->getInt('id', 0);
+        $model = $this->getModel();
+        $item = $model->getItem($id);
 
-		if ($user->authorise('core.manage', 'com_ra_eventbooking') || $item->checked_out == $user->id) { 
+        // Checking if the user can remove object
+        $user = $this->app->getIdentity();
 
-			$return = $model->checkin($id);
+        if ($user->authorise('core.manage', 'com_ra_eventbooking') || $item->checked_out == $user->id) {
 
-			if ($return === false)
-			{
-				// Checkin failed.
-				$message = Text::sprintf('JLIB_APPLICATION_ERROR_CHECKIN_FAILED', $model->getError());
-				$this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsetting' . '&id=' . $id, false), $message, 'error');
-				return false;
-			}
-			else
-			{
-				// Checkin succeeded.
-				$message = Text::_('COM_RA_EVENTBOOKING_CHECKEDIN_SUCCESSFULLY');
-				$this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsetting' . '&id=' . $id, false), $message);
-				return true;
-			}
-		}
-		else
-		{
-			throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-		}
-	}
+            $return = $model->checkin($id);
 
-	/**
-	 * Remove data
-	 *
-	 * @return void
-	 *
-	 * @throws Exception
-	 */
-	public function remove()
-	{
-		// Checking if the user can remove object
-		$user = $this->app->getIdentity();
+            if ($return === false) {
+                // Checkin failed.
+                $message = Text::sprintf('JLIB_APPLICATION_ERROR_CHECKIN_FAILED', $model->getError());
+                $this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsetting' . '&id=' . $id, false), $message, 'error');
+                return false;
+            } else {
+                // Checkin succeeded.
+                $message = Text::_('COM_RA_EVENTBOOKING_CHECKEDIN_SUCCESSFULLY');
+                $this->setRedirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsetting' . '&id=' . $id, false), $message);
+                return true;
+            }
+        } else {
+            throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+        }
+    }
 
-		if ($user->authorise('core.delete', 'com_ra_eventbooking'))
-		{
-			$model = $this->getModel('Eventsetting', 'Site');
+    /**
+     * Remove data
+     *
+     * @return void
+     *
+     * @throws Exception
+     */
+    public function remove() {
+        // Checking if the user can remove object
+        $user = $this->app->getIdentity();
 
-			// Get the user data.
-			$id = $this->input->getInt('id', 0);
+        if ($user->authorise('core.delete', 'com_ra_eventbooking')) {
+            $model = $this->getModel('Eventsetting', 'Site');
 
-			// Attempt to save the data.
-			$return = $model->delete($id);
+            // Get the user data.
+            $id = $this->input->getInt('id', 0);
 
-			// Check for errors.
-			if ($return === false)
-			{
-				$this->setMessage(Text::sprintf('Delete failed', $model->getError()), 'warning');
-			}
-			else
-			{
-				// Check in the profile.
-				if ($return)
-				{
-					$model->checkin($return);
-				}
+            // Attempt to save the data.
+            $return = $model->delete($id);
 
-				$this->app->setUserState('com_ra_eventbooking.edit.eventsetting.id', null);
-				$this->app->setUserState('com_ra_eventbooking.edit.eventsetting.data', null);
+            // Check for errors.
+            if ($return === false) {
+                $this->setMessage(Text::sprintf('Delete failed', $model->getError()), 'warning');
+            } else {
+                // Check in the profile.
+                if ($return) {
+                    $model->checkin($return);
+                }
 
-				$this->app->enqueueMessage(Text::_('COM_RA_EVENTBOOKING_ITEM_DELETED_SUCCESSFULLY'), 'success');
-				$this->app->redirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsettings', false));
-			}
+                $this->app->setUserState('com_ra_eventbooking.edit.eventsetting.id', null);
+                $this->app->setUserState('com_ra_eventbooking.edit.eventsetting.data', null);
 
-			// Redirect to the list screen.
-			$menu = Factory::getApplication()->getMenu();
-			$item = $menu->getActive();
-			$this->setRedirect(Route::_($item->link, false));
-		}
-		else
-		{
-			throw new \Exception(500);
-		}
-	}
+                $this->app->enqueueMessage(Text::_('COM_RA_EVENTBOOKING_ITEM_DELETED_SUCCESSFULLY'), 'success');
+                $this->app->redirect(Route::_('index.php?option=com_ra_eventbooking&view=eventsettings', false));
+            }
+
+            // Redirect to the list screen.
+            $menu = Factory::getApplication()->getMenu();
+            $item = $menu->getActive();
+            $this->setRedirect(Route::_($item->link, false));
+        } else {
+            throw new \Exception(500);
+        }
+    }
 }
