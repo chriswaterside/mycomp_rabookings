@@ -4,8 +4,6 @@
  * Admin email single booker
  *      parameters
  *         POST data
- *             id - id of event
- *             event - json version of walk/event Ramblers-webs format
  * 
  *      url
  *         index.php?option=com_ra_eventbooking&view=adminemailsinglebook&format=json
@@ -42,11 +40,11 @@ class JsonView extends BaseJsonView {
              if ($replyTo === null) {
                 throw new \RuntimeException('Unable to find sender');
             }
-            $copy = helper::eventContactEmail($ebRecord);
+            $copy = helper::getEventContact($ebRecord);
             $title = helper::getEmailTitle('EMAIL', $ew);
-            $content = helper::getEmailContent('emailbookers.html', $ew);
+            $content = helper::getEmailTemplate('emailbookers.html', $ew);
             $content = str_replace("{emailContent}", $data->emailContent, $content);
-            helper::sendEmails($to, $copy, $replyTo, $title, $content);
+            helper::sendEmailsToUser($to, $copy, $replyTo, $title, $content);
 
             $feedback[] = '<h3>Email has been sent</h3>';
             $record = new \stdClass();

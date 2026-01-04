@@ -57,10 +57,10 @@ class JsonView extends BaseJsonView {
             $replyTo->email = 'no-reply@ramblers-webs.org.uk';
 
             $title = 'Verify your email address';
-            $content = helper::getEmailContent($emailTemplate, $ew);
+            $content = helper::getEmailTemplate($emailTemplate, $ew);
             $content = str_replace("{verifyCode}", $code, $content);
 
-            helper::sendEmails($to, null, $replyTo, $title, $content);
+            helper::sendEmailsToUser($to, null, $replyTo, $title, $content);
 
             // return status of booking
             $record = new \stdClass();

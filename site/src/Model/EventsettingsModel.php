@@ -46,7 +46,7 @@ class EventsettingsModel extends ListModel {
                 'ordering', 'a.ordering',
                 'modified_by', 'a.modified_by',
                 'booking_data', 'a.booking_data',
-                'waiting_list_data', 'a.waiting_list_data',
+                'waiting_data', 'a.waiting_data',
                 'event_data', 'a.event_data',
                 'created_by', 'a.created_by',
                 'event_id', 'a.event_id',

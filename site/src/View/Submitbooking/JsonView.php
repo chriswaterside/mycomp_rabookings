@@ -9,7 +9,6 @@
  *      if user is not logged on and guest bookings are allowed
  *        name - name of person making booking
  *        email - email address of person making booking
- *        telephone - telephone number of person making booking
  *        
  * 
  *      url
@@ -72,10 +71,9 @@ class JsonView extends BaseJsonView {
             $id = $bookingData->id;
             $name = $bookingData->name;
             $email = $bookingData->email;
-            $telephone = $bookingData->telephone;
             $attendees = $bookingData->attendees;
             $paid = $bookingData->paid;
-            $newBooking = helper::getNewBooking($id, $name, $email, $telephone, $attendees, $paid, "Internal");
+            $newBooking = helper::getNewBooking($id, $name, $email, $attendees, $paid, "Internal");
 
             // retrieve current booking data
             $ebRecord = helper::getEVBrecord($ewid, "Internal");
@@ -93,7 +91,7 @@ class JsonView extends BaseJsonView {
             $isWaiting = $ebRecord->wlc->isWaiting($email);
             if ($isWaiting !== null) {
                 $ebRecord->wlc->remove($email);
-                helper::updateDBField($ewid, 'waiting_list_data', json_encode($ebRecord->wlc), 'string');
+                helper::updateDBField($ewid, 'waiting_data', json_encode($ebRecord->wlc), 'string');
                 $feedback[] = '<h3>We have removed you from the waiting list</h3>';
             }
 
@@ -103,11 +101,11 @@ class JsonView extends BaseJsonView {
             if ($attendees === 0) {
                 $action = 'CANCEL';
             }
-            $replyTo = helper::eventContactEmail($ebRecord);
-            $copyTo = helper::eventContactEmail($ebRecord);
+            $replyTo = helper::getEventContact($ebRecord);
+            $copyTo = helper::getEventContact($ebRecord);
             $title = helper::getEmailTitle($action, $ew);
-            $content = helper::getEmailContent($emailTemplate, $ew);
-            helper::sendEmails($to, $copyTo, $replyTo, $title, $content, $attach);
+            $content = helper::getEmailTemplate($emailTemplate, $ew);
+            helper::sendEmailsToUser($to, $copyTo, $replyTo, $title, $content, $attach);
 
             // return status of booking
             $record = new \stdClass();
@@ -138,9 +136,6 @@ class JsonView extends BaseJsonView {
                 throw new \RuntimeException('Invalid user details: name');
             }
             if (strlen($bookingData->email) === 0) {
-                throw new \RuntimeException('Invalid user details: email');
-            }
-            if (strlen($bookingData->telephone) === 0) {
                 throw new \RuntimeException('Invalid user details: email');
             }
             if ($bookingData->attendees > $maxguestattendees) {

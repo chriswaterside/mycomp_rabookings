@@ -41,15 +41,15 @@ class JsonView extends BaseJsonView {
             $to = [helper::getSendTo($juser->name, $juser->email)];
 
             $replyTo = null;
-            $copy = helper::eventContactEmail($ebRecord);
+            $copy = helper::getEventContact($ebRecord);
 
             if ($copy->email === $juser->email) {
                 $copy = null;
             }
             $title = helper::getEmailTitle('BOOKING LIST', $ew);
-            $content = helper::getEmailContent('emailbookinglist.html', $ew);
+            $content = helper::getEmailTemplate('emailbookinglist.html', $ew);
             $content = str_replace("{bookinglist}", $bookinglist, $content);
-            helper::sendEmails($to, $copy, $replyTo, $title, $content);
+            helper::sendEmailsToUser($to, $copy, $replyTo, $title, $content);
 
             $feedback[] = '<h3>Email has been sent</h3>';
             $record = new \stdClass();

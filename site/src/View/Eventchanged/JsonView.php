@@ -39,19 +39,20 @@ class JsonView extends BaseJsonView {
             $attach->mimeType = 'text/calendar';
             $ebRecord = helper::getEVBrecord($ewid, "Internal");
             $ew = json_decode($data->ew);
-            $update = new \stdClass();
-            $update->dateUpdated = $ew->admin->dateUpdated;
-            $update->localPopupUrl = $ew->admin->localPopupUrl;
-            $update->date = $ew->basics->walkDate;
-            $update->title = $ew->basics->title;
-            $update->description = $ew->basics->description;
+            $date = $ew->basics->walkDate;
+            $dateUpdated = $ew->admin->dateUpdated;
+            $walktitle = $ew->basics->title;
+            $localPopupUrl = $ew->admin->localPopupUrl;
+
+            $update = helper::createEventData($date, $walktitle, $dateUpdated, $localPopupUrl);
+
             helper::updateDBField($ewid, 'event_data', json_encode($update), 'string');
 
             $to = $ebRecord->blc->getArray();
-            $replyTo = helper::eventContactEmail($ebRecord);
-            $title = helper::getEmailTitle('Event changed', $ew);
-            $content = helper::getEmailContent('eventchanged.html', $ew);
-            helper::sendEmails($to, null, $replyTo, $title, $content, $attach);
+            $replyTo = helper::getEventContact($ebRecord);
+            $title = helper::getEmailTitle('EVENT CHANGED', $ew);
+            $content = helper::getEmailTemplate('eventchanged.html', $ew);
+            helper::sendEmailsToUser($to, null, $replyTo, $title, $content, $attach);
 
             $record = new \stdClass();
             $record->feedback = $feedback;

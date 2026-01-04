@@ -9,6 +9,7 @@
 // No direct access
 defined('_JEXEC') or die;
 
+use \Ramblers\Component\Ra_eventbooking\Site\Helper\Ra_eventbookingHelper as helper;
 use \Joomla\CMS\HTML\HTMLHelper;
 use \Joomla\CMS\Factory;
 use \Joomla\CMS\Uri\Uri;
@@ -96,6 +97,11 @@ if (!$canEdit && Factory::getApplication()->getIdentity()->authorise('core.edit.
         </tr>
 
     </table>
+    <?php
+    $bookings = helper::createBlc();
+    $bookings->process($this->item->booking_data, 'internal');
+    echo $bookings->getBookingTable($this->item->payment_required, $canEdit);
+    ?>
 
 </div>
 
@@ -113,8 +119,8 @@ if (!$canEdit && Factory::getApplication()->getIdentity()->authorise('core.edit.
     <a class="btn btn-danger link-button granite" rel="noopener noreferrer" href="#deleteModal" role="button" data-bs-toggle="modal">
         <?php echo Text::_("COM_RA_EVENTBOOKING_DELETE_ITEM"); ?>
     </a>
-    
-    <a class="btn btn-outline-primary link-button granite" href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettings' ); ?>"><?php echo Text::_("COM_RA_EVENTBOOKING_CANCEL_ITEMS"); ?></a>
+
+    <a class="btn btn-outline-primary link-button granite" href="<?php echo Route::_('index.php?option=com_ra_eventbooking&task=eventsettings'); ?>"><?php echo Text::_("COM_RA_EVENTBOOKING_CANCEL_ITEMS"); ?></a>
     <?php
     echo HTMLHelper::_(
             'bootstrap.renderModal',

@@ -75,6 +75,9 @@ ra.bookings.serverAction = function (self, action, dataObj, fcn) {
         case 'NotifyListEmail':
             url = "index.php?option=com_ra_eventbooking&view=notifylistemail&format=json";
             break;
+       case 'emailBookingContact':
+            url = "index.php?option=com_ra_eventbooking&view=emailbookingcontact&format=json";
+            break;
         default:
             ra.showMsg(action);
             return;
@@ -271,11 +274,6 @@ ra.bookings.inputFields = function () {
         inputTag.addEventListener("input", function (e) {
             e.target.value = e.target.value.toLowerCase();
         });
-        return inputTag;
-    };
-    this.addtelephone = function (tag, divClass, label, raobject, property, placeholder = '', helpFunction = null) {
-        var inputTag = this.addText(tag, divClass, label, raobject, property, placeholder, helpFunction);
-        inputTag.setAttribute('type', 'tel');
         return inputTag;
     };
     this.addComment = function (tag, divClass, label, comment, helpFunction = null) {
@@ -747,9 +745,6 @@ ra.bookings.blc = function () {
         if (options.guest) {
             cols.push("Status");
         }
-        if (options.canEdit) {
-            cols.push("Telephone");
-        }
         cols.push("Places");
         if (options.displayPaid) {
             cols.push("Paid");
@@ -779,8 +774,7 @@ ra.bookings.bli = function (value) {
     this.id = value.id;
     this.name = value.name;
     this.md5Email = value.md5Email;
-    this.telephone = value.telephone;
-    this.attendees = parseInt(value.noAttendees);
+       this.attendees = parseInt(value.noAttendees);
     this.paid = value.paid;
 
     this.isPresent = function (md5Email) {
@@ -801,9 +795,7 @@ ra.bookings.bli = function (value) {
                 cols.push("Guest");
             }
         }
-        if (options.canEdit) {
-            cols.push(this.telephone);
-        }
+        
         cols.push(this.attendees);
         if (options.displayPaid) {
             cols.push(this.getPaid(options, eventTag, this));
@@ -881,10 +873,7 @@ ra.bookings.wlc = function () {
         if (options.guest) {
             cols.push("Status");
         }
-        if (options.canEdit) {
-            cols.push("Telephone");
-        }
-        if (options.canEdit) {
+               if (options.canEdit) {
             cols.push("Actions");
         }
         ra.html.addTableRow(table, cols, 'th');
@@ -898,8 +887,7 @@ ra.bookings.wli = function (value) {
     this.id = value.id;
     this.name = value.name;
     this.md5Email = value.md5Email;
-    this.telephone = value.telephone;
-    this.isPresent = function (md5Email) {
+       this.isPresent = function (md5Email) {
         return md5Email === this.md5Email;
     };
     this.list = function (eventTag, tag, options) {
@@ -915,7 +903,6 @@ ra.bookings.wli = function (value) {
             }
         }
         if (options.canEdit) {
-            cols.push(this.telephone);
             var self = this;
             var span = document.createElement("span");
             ra.bookings.displayDeleteIcon(span, "Delete from list", eventTag, "deleteWaiting", {user: self});

@@ -44,7 +44,7 @@ class JsonView extends BaseJsonView {
             $ebRecord = helper::getEVBrecord($ewid, "Internal");
 
             $ebRecord->wlc->removeItemByMd5Email($md5Email);
-            helper::updateDBField($ewid, 'waiting_list_data', json_encode($ebRecord->wlc), 'string');
+            helper::updateDBField($ewid, 'waiting_data', json_encode($ebRecord->wlc), 'string');
 
             $feedback[] = '<h3>The notification list entry for this event has been removed</h3>';
 

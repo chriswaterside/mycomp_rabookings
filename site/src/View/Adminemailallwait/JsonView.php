@@ -34,11 +34,11 @@ class JsonView extends BaseJsonView {
             $ew = json_decode($data->ew);
 
             $to = $ebRecord->wlc->getArray();
-            $replyTo = helper::eventContactEmail($ebRecord);
+            $replyTo = helper::getEventContact($ebRecord);
             $title = helper::getEmailTitle('EMAIL', $ew);
-            $content = helper::getEmailContent('emailwaiting.html', $ew);
+            $content = helper::getEmailTemplate('emailwaiting.html', $ew);
             $content = str_replace("{emailContent}", $data->emailContent, $content);
-            helper::sendEmails($to, null, $replyTo, $title, $content);
+            helper::sendEmailsToUser($to, null, $replyTo, $title, $content);
             $feedback[] = '<h3>Emails have been sent</h3>';
             $record = new \stdClass();
             $record->feedback = $feedback;

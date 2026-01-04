@@ -37,7 +37,6 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
         email: '',
         confirmEmail: '',
         md5Email: '',
-        telephone: '',
         paid: '',
         currentAttendees: 0};
     this.input = new ra.bookings.inputFields;
@@ -55,30 +54,26 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
             {name: 'container', parent: 'root', tag: 'div', attrs: {class: 'ra bookings form'}},
             {name: 'event', parent: 'container', tag: 'div', attrs: {class: 'bookingitem'}},
             {name: 'eventDetails', parent: 'event', tag: 'div'},
-            {name: 'userOptions', parent: 'event', tag: 'div'},
-            {parent: 'event', tag: 'div', style: {clear: 'both', 'margin-bottom': '10px'}},
             {name: 'lists', parent: 'event', tag: 'div'},
-            {parent: 'event', tag: 'div', style: {clear: 'both', 'margin-bottom': '10px'}},
             {name: 'userDetails', parent: 'container', tag: 'div', attrs: {class: 'bookingitem'}},
             {name: 'user', parent: 'userDetails', tag: 'div'},
-            {name: 'status', parent: 'userDetails', tag: 'div'},
+            //  {name: 'status', parent: 'userDetails', tag: 'div'},
             {name: 'bookplace', parent: 'userDetails', tag: 'div'},
-            {name: 'message', parent: 'userDetails', tag: 'div'},
-            {name: 'content', parent: 'userDetails', tag: 'div'}
+            {name: 'message', parent: 'userDetails', tag: 'div'}
         ];
         this.elements = ra.html.generateTags(tag, tags);
         this.displayEvent(this.elements.eventDetails);
         var self = this;
         this.tag.addEventListener('userDetailsVerified', (e) => {
-            self.elements.content.innerHTML = '';
             self.elements.lists.innerHTML = '';
             self.elements.bookplace.innerHTML = '';
-            this.elements.message.innerHTML = '';
+            self.elements.message.innerHTML = '';
             self.bookingForm(self.elements.bookplace);
+            self.emailBookingContact(self.elements.lists);
+            self.elements.lists.appendChild(document.createElement('p'));
             self.bookingLists(self.elements.lists);
         });
         this.tag.addEventListener('userDetailsChanged', (e) => {
-            self.elements.content.innerHTML = '';
             self.elements.lists.innerHTML = '';
             self.elements.bookplace.innerHTML = '';
             if (e.raData.okay) {
@@ -87,6 +82,28 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
         });
         this.getUser(this.elements.user);
     };
+    this.emailBookingContact = function (tag) {
+        var ele = document.createElement('div');
+        tag.appendChild(ele);
+        var help = document.createElement("span");
+        help.style.paddingRight = '10px';
+        help.innerHTML = 'Need help? Email the booking contact';
+        ele.appendChild(help);
+        ra.bookings.displayEmailIcon(ele, 'Need help? Email the booking contact', tag, "emailContact", {user: self});
+        var self = this;
+        tag.addEventListener('emailContact', (e) => {
+            var options = {
+                subject: self.eventTitle,
+                toWhom: self.settings.group_contact_name + ' (the booking contact for this event)',
+                from: this.bookingData,
+                emailContent: '',
+                ewid: self.ewid,
+                ew: JSON.stringify(self.ew),
+                serverAction: 'emailBookingContact'
+            };
+            self.emailForm(options);
+        });
+    }
     this.refreshDisplay = function () {
         let event = new Event("bookingInfoChanged"); // 
         document.dispatchEvent(event);
@@ -105,7 +122,6 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
             this.bookingData.id = this.user.id;
             this.bookingData.name = this.user.name;
             this.bookingData.md5Email = this.user.md5Email;
-            this.bookingData.telephone = '';
             ra.bookings.addTextTag(tag, 'h3', 'Welcome ' + this.user.name);
             let event = new Event("userDetailsVerified"); // 
             this.tag.dispatchEvent(event);
@@ -122,7 +138,6 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
         this._name = this.input.addText(tag, 'name', "Your name:", this.bookingData, 'name', 'Who is making this booking', null);
         this._email = this.input.addEmail(tag, 'email', "Email Address:", this.bookingData, 'email', 'Contact\'s email address', null);
         this._confirmEmail = this.input.addEmail(tag, 'email', "Confirm Email Address:", this.bookingData, 'confirmEmail', 'Confirm email address', null);
-        this._tel = this.input.addtelephone(tag, 'tel', "Contact Telephone:", this.bookingData, 'telephone', 'Telephone number', null);
         var self = this;
         this._name.addEventListener("input", function () {
             self.checkUserDetails();
@@ -133,20 +148,18 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
         this._confirmEmail.addEventListener("input", function () {
             self.checkUserDetails();
         });
-        this._tel.addEventListener("input", function () {
-            self.checkUserDetails();
-        });
+
     };
     this.checkUserDetails = function () {
         var $okay = true;
         this._name.style.color = 'black';
         this._email.style.color = 'black';
         this._confirmEmail.style.color = 'black';
-        this._tel.style.color = 'black';
+
         var name = this._name.value.trim();
         var email = this._email.value.trim();
         var confirmEmail = this._confirmEmail.value.trim();
-        var tel = this._tel.value.trim();
+
         if (email !== confirmEmail) {
             this.verification = {md5: '',
                 codeLength: 6};
@@ -159,10 +172,6 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
             this._email.style.color = 'red';
             $okay = false;
         }
-        if (tel.length < 7) {
-            this._tel.style.color = 'red';
-            $okay = false;
-        }
         if (!this._email.checkValidity()) {
             this._email.style.color = 'red';
             $okay = false;
@@ -172,10 +181,7 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
             this._confirmEmail.style.color = 'red';
             $okay = false;
         }
-        if (/^[0-9+\-() ]+$/.test(tel) === false) {
-            this._tel.style.color = 'red';
-            $okay = false;
-        }
+
         let event = new Event("userDetailsChanged"); // 
         event.raData = {};
         event.raData.okay = $okay;
@@ -453,7 +459,6 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
         if (displayWaitingList) {
             this.displayWaitingListOptions(tag);
         }
-
     };
     this.submitBooking = function () {
         const data = {
@@ -541,6 +546,7 @@ ra.bookings.formBooking = function (settings, user, ewid, ew, evb, ics) {
         this.input.addComment(div, 'title', 'Event', options.subject);
         this.input.addComment(div, 'to', 'You are emailing', options.toWhom);
         this.input.addHtmlArea(div, 'desc', "Content:", 10, options, 'emailContent', 'Add a description of walk so walkers know what to expect', null);
+        div.appendChild(document.createElement("p"));
         var button = this.input.addButton(div, ['submit', 'link-button', 'tiny', 'button', 'mintcake'], 'Send Email');
         button.addEventListener('click', (e) => {
             if (options.emailContent.length < 10) {

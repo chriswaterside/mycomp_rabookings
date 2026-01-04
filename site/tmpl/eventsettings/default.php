@@ -53,11 +53,6 @@ $wa->useStyle('com_ra_eventbooking.list');
         <table class="table table-striped" id="eventsettingList">
             <thead>
                 <tr>
-
-                    <th class=''>
-                        <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_ID', 'a.id', $listDirn, $listOrder); ?>
-                    </th>
-
                     <th >
                         <?php echo HTMLHelper::_('grid.sort', 'JPUBLISHED', 'a.state', $listDirn, $listOrder); ?>
                     </th>
@@ -75,6 +70,11 @@ $wa->useStyle('com_ra_eventbooking.list');
 
                     <th class=''>
                         <?php echo HTMLHelper::_('grid.sort', 'COM_RA_EVENTBOOKING_EVENTSETTINGS_PAYMENT_REQUIRED', 'a.payment_required', $listDirn, $listOrder); ?>
+                    </th>
+                    <th class=''>
+                       
+                        <?php echo HTMLHelper::_('grid.sort', 'EVENT', 'a.event_data', $listDirn, $listOrder); ?>
+                    
                     </th>
 
                     <?php if ($canEdit || $canDelete): ?>
@@ -104,9 +104,6 @@ $wa->useStyle('com_ra_eventbooking.list');
                     <tr class="row<?php echo $i % 2; ?>">
 
                         <td>
-                            <?php echo $item->id; ?>
-                        </td>
-                        <td>
                             <?php $class = ($canChange) ? 'active' : 'disabled'; ?>
                             <a class="btn btn-micro <?php echo $class; ?>" href="<?php echo ($canChange) ? Route::_('index.php?option=com_ra_eventbooking&task=eventsetting.publish&id=' . $item->id . '&state=' . (($item->state + 1) % 2), false, 2) : '#'; ?>">
                                 <?php if ($item->state == 1): ?>
@@ -135,6 +132,15 @@ $wa->useStyle('com_ra_eventbooking.list');
                         } else {
                             echo '<td>No</td>';
                         }
+                        $event = $item->event_data;
+                        if ($event === "" OR $event === null) {
+                            echo '<td>Not set</td>';
+                        } else {
+                            $data = \json_decode($event);
+                            $out = $data->date;
+                            $out .= '<br>' . $data->title;
+                            echo '<td>' . $out . '</td>';
+                        }
                         ?>
 
 
@@ -161,7 +167,7 @@ $wa->useStyle('com_ra_eventbooking.list');
            class="btn btn-success btn-small link-button mintcake"><i
                 class="icon-plus"></i>
             <?php echo Text::_('COM_RA_EVENTBOOKING_ADD_ITEM'); ?></a>
-        <?php endif; ?>
+    <?php endif; ?>
 
     <input type="hidden" name="task" value=""/>
     <input type="hidden" name="boxchecked" value="0"/>

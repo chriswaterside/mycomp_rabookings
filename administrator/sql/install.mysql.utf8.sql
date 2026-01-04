@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `#__ra_event_bookings` (
 `checked_out_time` DATETIME NULL  DEFAULT NULL ,
 `modified_by` INT(11)  NULL  DEFAULT 0,
 `booking_data` LONGTEXT NULL ,
-`waiting_list_data` LONGTEXT NULL ,
+`waiting_data` LONGTEXT NULL ,
 `event_data` LONGTEXT NULL ,
 `created_by` INT(11)  NULL  DEFAULT 0,
 `event_id` VARCHAR(255)  NOT NULL ,

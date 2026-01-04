@@ -119,18 +119,18 @@ class Ra_eventbookingHelper {
         return $result;
     }
 
-    public static function getNewBooking($id, $name, $email, $telephone, $attendees, $paid, $mode) {
-        return new bli($id, $name, $email, $telephone, $attendees, $paid, $mode);
+    public static function getNewBooking($id, $name, $email, $attendees, $paid, $mode) {
+        return new bli($id, $name, $email, $attendees, $paid, $mode);
     }
 
-    public static function getNewWaiting($id, $name, $email, $telephone, $mode) {
-        return new wli($id, $name, $email, $telephone, $mode);
+    public static function getNewWaiting($id, $name, $email, $mode) {
+        return new wli($id, $name, $email, $mode);
     }
 
     public static function getEVBrecord($ewid, $mode) {
         $db = Factory::getDbo();
         $query = $db->getQuery(true);
-        $names = array('max_places', 'booking_data', 'waiting_list_data', 'event_data',
+        $names = array('max_places', 'booking_data', 'waiting_data', 'event_data',
             'payment_required', 'payment_details',
             'booking_contact_id');
         $query->select($db->quoteName($names));
@@ -152,9 +152,9 @@ class Ra_eventbookingHelper {
             unset($result->booking_data);
 
             $waiting = new wlc();
-            $waiting->process($result->waiting_list_data, $mode);
+            $waiting->process($result->waiting_data, $mode);
             $result->wlc = $waiting;
-            unset($result->waiting_list_data);
+            unset($result->waiting_data);
 
             $event = new eventData();
             $event->process($result->event_data);
@@ -167,7 +167,7 @@ class Ra_eventbookingHelper {
     public static function getAllEVBRecords() {
         $db = Factory::getDbo();
         $query = $db->getQuery(true);
-        $names = array('event_id', 'max_places', 'booking_data', 'waiting_list_data', 'event_data',
+        $names = array('event_id', 'max_places', 'booking_data', 'waiting_data', 'event_data',
             'payment_required', 'payment_details',
             'booking_contact_id');
         $query->select($db->quoteName($names));
@@ -186,7 +186,7 @@ class Ra_eventbookingHelper {
             $row->blc = $bookings;
 
             $waiting = new wlc();
-            $waiting->process($row->waiting_list_data, 'Summary');
+            $waiting->process($row->waiting_data, 'Summary');
             $row->wlc = $waiting;
 
             $event = new eventData();
@@ -201,7 +201,7 @@ class Ra_eventbookingHelper {
         $currentNoAttendees = $evb->blc->noAttendees();
         $extraPlaces = $newBooking->noAttendees();
 // check if use has existing booking
-        $currentBooking = $evb->blc->hasBooking($newBooking->getEmail());
+        $currentBooking = $evb->blc->hasBooking($newBooking->email);
         if ($currentBooking !== null) {
             $extraPlaces = $extraPlaces - $currentBooking->noAttendees();
         }
@@ -218,7 +218,7 @@ class Ra_eventbookingHelper {
 
     public static function updateBooking($evb, $newBooking) {
         $bookings = $evb->blc;
-        $bookings->removeItem($newBooking->getEmail()); // remove old booking if there is one
+        $bookings->removeItem($newBooking->email); // remove old booking if there is one
         if ($newBooking->noAttendees() > 0) {
             $bookings->addItem($newBooking);
         }
@@ -231,7 +231,7 @@ class Ra_eventbookingHelper {
 
     public static function updateWaiting($evb, $newBooking) {
         $waiting = $evb->wlc;
-        $waiting->removeItem($newBooking->getEmail()); // remove old booking if there is one
+        $waiting->removeItem($newBooking->email); // remove old booking if there is one
         $waiting->addItem($newBooking);
     }
 
@@ -281,7 +281,7 @@ class Ra_eventbookingHelper {
         }
     }
 
-    public static function eventContactEmail($evb) {
+    public static function getGroupContact() {
         // return who user should reply to
         $componentParams = ComponentHelper::getParams('com_ra_eventbooking');
         $id = $componentParams->get('group_booking_contact', 0);
@@ -289,23 +289,32 @@ class Ra_eventbookingHelper {
             throw new \RuntimeException('Group Booking Contact not set - contact group');
         }
         $juser = Factory::getUser($id);
-        $groupContactName = $juser->name;
-        $groupContactEmail = $juser->email;
-        if ($evb->booking_contact_id !== 0) {
-            $euser = Factory::getUser($id);
-            $groupContactName = $euser->name;
-            $groupContactEmail = $euser->email;
-        }
-        $user = new class {
-            
-        };
-        $user->name = $groupContactName;
-        $user->email = $groupContactEmail;
-
+        $user = (object) ['name' => $juser->name,
+                    'email' => $juser->email];
         return $user;
     }
 
-    public static function sendEmails($sendToArray, $copy, $replyTo, $subject, $content, $attach = null) {
+    public static function getEventContact($evb) {
+        // return who user should reply to
+        $componentParams = ComponentHelper::getParams('com_ra_eventbooking');
+        $id = $componentParams->get('group_booking_contact', 0);
+        If ($id === 0) {
+            throw new \RuntimeException('Group Booking Contact not set - contact group');
+        }
+        $juser = Factory::getUser($id);
+        $name = $juser->name;
+        $email = $juser->email;
+        if ($evb->booking_contact_id !== 0) {
+            $euser = Factory::getUser($id);
+            $name = $euser->name;
+            $email = $euser->email;
+        }
+        $user = (object) ['name' => $name,
+                    'email' => $email];
+        return $user;
+    }
+
+    public static function sendEmailsToUser($sendToArray, $copy, $replyTo, $subject, $content, $attach = null) {
         $config = Factory::getConfig();
         $sender = array(
             $config->get('mailfrom'),
@@ -329,20 +338,59 @@ class Ra_eventbookingHelper {
         }
         foreach ($sendToArray as $sendTo) {
             $mailer->clearAllRecipients();
-            $mailer->addRecipient($sendTo->getEmail(), $sendTo->getName());
+            $mailer->addRecipient($sendTo->email, $sendTo->name);
             if ($copy !== null) {
                 $mailer->addCC($copy->email, $copy->name);
             }
             $body = $content;
-            $body = str_replace("{toName}", $sendTo->getName(), $body);
-            $body = str_replace("{toEmail}", $sendTo->getEmail(), $body);
+            $body = str_replace("{toName}", $sendTo->name, $body);
+            $body = str_replace("{toEmail}", $sendTo->email, $body);
             $body = str_replace("{attendees}", $sendTo->noAttendees(), $body);
             $body = str_replace("{replyToName}", $replyTo->name, $body);
             $mailer->setBody($body);
             $send = $mailer->Send();
             if (!$send) {
-                Log::add('Unable to send email to ' . $sendTo->getName(), Log::ERROR, 'com_ra_eventbooking');
+                Log::add('Unable to send email to ' . $sendTo->name, Log::ERROR, 'com_ra_eventbooking');
             }
+        }
+    }
+
+    public static function sendEmailfromUser($sendTo, $copy, $replyTo, $subject, $content, $attach = null) {
+        $config = Factory::getConfig();
+        $sender = array(
+            $config->get('mailfrom'),
+            $config->get('fromname')
+        );
+
+        $container = Factory::getContainer();
+        $mailer = $container->get(MailerFactoryInterface::class)->createMailer();
+        $mailer->isHtml(true);
+        $mailer->Encoding = '8bit';
+        $mailer->setSender($sender);
+        if ($replyTo !== null) {
+            $mailer->addReplyTo($replyTo->email, $replyTo->name);
+        }
+        $mailer->setSubject($subject);
+        if ($attach !== null) {
+            if ($attach->type === 'string') {
+                self::addStringAttachment($mailer, $attach);
+            }
+        }
+
+        //    $mailer->clearAllRecipients();
+        $mailer->addRecipient($sendTo->email, $sendTo->name);
+        if ($copy !== null) {
+            $mailer->addCC($copy->email, $copy->name);
+        }
+        $body = $content;
+        $body = str_replace("{toName}", $sendTo->name, $body);
+        $body = str_replace("{toEmail}", $sendTo->email, $body);
+        //     $body = str_replace("{attendees}", $sendTo->noAttendees(), $body);
+        $body = str_replace("{replyToName}", $replyTo->name, $body);
+        $mailer->setBody($body);
+        $send = $mailer->Send();
+        if (!$send) {
+            Log::add('Unable to send email to ' . $sendTo->name, Log::ERROR, 'com_ra_eventbooking');
         }
     }
 
@@ -383,7 +431,7 @@ class Ra_eventbookingHelper {
         return $title;
     }
 
-    public static function getEmailContent($template, $ew) {
+    public static function getEmailTemplate($template, $ew) {
         $filePath = JPATH_COMPONENT . '/src/Helper/templates/' . $template;
         $content = \file_get_contents($filePath);
         if (!$content) {
@@ -469,6 +517,16 @@ class Ra_eventbookingHelper {
         $settings->userlistvisibletoguests = $componentParams->get('userlistvisibletoguests') === "1";
         return $settings;
     }
+
+    public static function createBlc() {
+        return new blc();
+    }
+
+    public static function createEventData($date, $title, $dateUpdated, $localPopupUrl) {
+        $ed = new eventData();
+        $ed->setValues($date, $title, $dateUpdated, $localPopupUrl);
+        return $ed;
+    }
 }
 
 class blc implements \JsonSerializable {
@@ -481,7 +539,7 @@ class blc implements \JsonSerializable {
 
     public function removeItem($email) {
         foreach ($this->items as $key => $item) {
-            if ($item->getEmail() === $email) {
+            if ($item->email === $email) {
                 unset($this->items[$key]);
             }
         }
@@ -514,7 +572,7 @@ class blc implements \JsonSerializable {
         }
         $values = \json_decode($jsonValue);
         foreach ($values as $value) {
-            $this->addItem(new bli($value->id, $value->name, $value->email, $value->telephone, $value->noAttendees, $value->paid, $mode));
+            $this->addItem(new bli($value->id, $value->name, $value->email, $value->noAttendees, $value->paid, $mode));
         }
     }
 
@@ -528,7 +586,7 @@ class blc implements \JsonSerializable {
 
     public function hasBooking($email) {
         foreach ($this->items as $item) {
-            if ($item->getEmail() === $email) {
+            if ($item->email === $email) {
                 return $item;
             }
         }
@@ -543,7 +601,7 @@ class blc implements \JsonSerializable {
         return $to;
     }
 
-    public function getBookingTable($paid = false) {
+    public function getBookingTable($paid = false, $canEdit = false) {
         $out = "<table>";
         $out .= "<caption>";
         $out .= "Booking list for this event";
@@ -551,8 +609,9 @@ class blc implements \JsonSerializable {
         $out .= "</caption>";
         $out .= "<thead><tr>";
         $out .= "<th>Name</th>";
-        $out .= "<th>Email</th>";
-        $out .= "<th>Telephone</th>";
+        if ($canEdit) {
+            $out .= "<th>Email</th>";
+        }
         $out .= "<th>Attendees</th>";
         if ($paid) {
             $out .= "<th>Paid</th>";
@@ -561,7 +620,7 @@ class blc implements \JsonSerializable {
         $out .= "<tbody>";
 
         foreach ($this->items as $item) {
-            $out .= $item->getTableRow($paid);
+            $out .= $item->getTableRow($paid, $canEdit);
         }
         $out .= "</tbody>";
         $out .= "</table>";
@@ -578,18 +637,16 @@ class blc implements \JsonSerializable {
 class bli implements \JsonSerializable {
 
     private $id;
-    private $name;
-    private $email;
-    private $telephone;
+    public readonly string $name;
+    public readonly string $email;
     private $noAttendees;
     private $paid;
     private $mode; // 'Summary', 'Single' or 'Internal'
 
-    public function __construct($id, $name, $email, $telephone, $attendees, $paid, $mode) {
+    public function __construct($id, $name, $email, $attendees, $paid, $mode) {
         $this->id = $id;
         $this->name = $name;
         $this->email = $email;
-        $this->telephone = trim($telephone);
         $this->noAttendees = intval($attendees);
         $this->setPaid($paid);
         $this->mode = $mode;
@@ -603,18 +660,6 @@ class bli implements \JsonSerializable {
         return $this->noAttendees;
     }
 
-    public function getName() {
-        return $this->name;
-    }
-
-    public function getEmail() {
-        return $this->email;
-    }
-
-    public function getTelephone() {
-        return $this->telephone;
-    }
-
     public function setPaid($value) {
         $this->paid = $value;
         if ($value === "") {
@@ -626,11 +671,12 @@ class bli implements \JsonSerializable {
         return md5($this->email);
     }
 
-    public function getTableRow($paid) {
+    public function getTableRow($paid, $canEdit) {
         $out = "<tr>";
         $out .= '<td>' . $this->name . '</td>';
-        $out .= '<td>' . $this->email . '</td>';
-        $out .= '<td>' . $this->telephone . '</td>';
+        if ($canEdit) {
+            $out .= '<td>' . $this->email . '</td>';
+        }
         $out .= '<td>' . $this->noAttendees . '</td>';
         if ($paid) {
             $out .= '<td>' . $this->paid . '</td>';
@@ -651,7 +697,6 @@ class bli implements \JsonSerializable {
                     "id" => $this->id,
                     "name" => $this->name,
                     "md5Email" => md5($this->email),
-                    "telephone" => $this->telephone,
                     "noAttendees" => $this->noAttendees,
                     "paid" => $this->paid,
                 ];
@@ -660,7 +705,6 @@ class bli implements \JsonSerializable {
                     "id" => $this->id,
                     "name" => $this->name,
                     "email" => $this->email,
-                    "telephone" => $this->telephone,
                     "noAttendees" => $this->noAttendees,
                     "paid" => $this->paid,
                 ];
@@ -688,7 +732,7 @@ class wlc implements \JsonSerializable {
         }
         $values = \json_decode($jsonValue);
         foreach ($values as $value) {
-            $this->addItem(new wli($value->id, $value->name, $value->email, $value->telephone, $mode));
+            $this->addItem(new wli($value->id, $value->name, $value->email, $mode));
         }
     }
 
@@ -746,25 +790,15 @@ class wlc implements \JsonSerializable {
 class wli implements \JsonSerializable {
 
     private $id;
-    private $name;
-    private $email;
-    private $telephone;
+    public readonly string $name;
+    public readonly string $email;
     private $mode;
 
-    public function __construct($id, $name, $email, $telephone, $mode) {
+    public function __construct($id, $name, $email, $mode) {
         $this->id = $id;
         $this->name = $name;
         $this->email = $email;
-        $this->telephone = trim($telephone);
         $this->mode = $mode;
-    }
-
-    public function getName() {
-        return $this->name;
-    }
-
-    public function getEmail() {
-        return $this->email;
     }
 
     public function getMd5Email() {
@@ -773,10 +807,6 @@ class wli implements \JsonSerializable {
 
     public function noAttendees() {
         return 'Waiting list only/Not booked';
-    }
-
-    public function getTelephone() {
-        return $this->telephone;
     }
 
     public function isWaiting($email) {
@@ -792,14 +822,12 @@ class wli implements \JsonSerializable {
                     "id" => $this->id,
                     "name" => $this->name,
                     "md5Email" => md5($this->email),
-                    "telephone" => $this->telephone,
                 ];
             case "Internal":
                 return [
                     "id" => $this->id,
                     "name" => $this->name,
                     "email" => $this->email,
-                    "telephone" => $this->telephone,
                 ];
             default:
                 return [];
@@ -816,6 +844,13 @@ class eventData implements \JsonSerializable {
 
     public function __construct() {
         
+    }
+
+    public function setValues($date, $title, $dateUpdated, $localPopupUrl) {
+        $this->date = $date;
+        $this->title = $title;
+        $this->dateUpdated = $dateUpdated;
+        $this->localPopupUrl = $localPopupUrl;
     }
 
     public function process($jsonValue) {
@@ -842,7 +877,7 @@ class eventData implements \JsonSerializable {
     #[\Override]
     public function jsonSerialize(): mixed {
         return [
-            "date" => $this->date,
+            "date" => $this->date, // first to allow sort on date
             "title" => $this->title,
             "dateUpdated" => $this->dateUpdated,
             "localPopupUrl" => $this->localPopupUrl
